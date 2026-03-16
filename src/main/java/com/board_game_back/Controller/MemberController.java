@@ -10,7 +10,6 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -28,7 +27,6 @@ public class MemberController {
 
     private final MemberRepository memberRepository;
     private final PlayerGameRatingRepository playerGameRatingRepository;
-    private final PasswordEncoder passwordEncoder;
 
     // 멤버 조회
     @GetMapping("/{memberId}")
@@ -81,30 +79,4 @@ public class MemberController {
         return ResponseEntity.ok().build();
     }
 
-    // 비밀번호 변경
-    @PatchMapping("/{id}/password")
-    @Transactional
-    public ResponseEntity<Map<String, String>> updatePassword(
-        @PathVariable Long id,
-        @RequestBody Map<String, String> body) {
-        String currentPassword = body.get("currentPassword");
-        String newPassword = body.get("newPassword");
-
-        if (newPassword == null || newPassword.length() < 6) {
-            return ResponseEntity.badRequest().body(Map.of("message", "새 비밀번호는 6자 이상이어야 합니다."));
-        }
-
-        Member member = memberRepository.findById(id)
-            .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 회원입니다."));
-
-        if (member.getPassword() != null && !member.getPassword().isBlank()) {
-            if (currentPassword == null || !passwordEncoder.matches(currentPassword,
-                member.getPassword())) {
-                return ResponseEntity.status(401).body(Map.of("message", "현재 비밀번호가 올바르지 않습니다."));
-            }
-        }
-
-        member.updatePassword(passwordEncoder.encode(newPassword));
-        return ResponseEntity.ok().build();
-    }
 }

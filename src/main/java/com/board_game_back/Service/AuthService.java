@@ -176,15 +176,4 @@ public class AuthService {
         return candidate;
     }
 
-    /** 비밀번호 변경 */
-    @Transactional
-    public void changePassword(Long memberId, String currentPassword, String newPassword) {
-        Member member = memberRepository.findById(memberId)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 회원입니다."));
-        if (!passwordEncoder.matches(currentPassword, member.getPassword())) {
-            throw new IllegalArgumentException("현재 비밀번호가 틀렸습니다.");
-        }
-        member.updatePassword(passwordEncoder.encode(newPassword));
-        memberRepository.save(member);
-    }
 }

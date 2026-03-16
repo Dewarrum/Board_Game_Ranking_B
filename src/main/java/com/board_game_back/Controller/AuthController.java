@@ -1,7 +1,6 @@
 package com.board_game_back.Controller;
 
 import com.board_game_back.DTO.AuthDto;
-import com.board_game_back.Security.JwtTokenProvider;
 import com.board_game_back.Service.AuthService;
 import jakarta.servlet.http.HttpServletResponse;
 import java.time.Duration;
@@ -14,9 +13,7 @@ import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -27,7 +24,6 @@ import org.springframework.web.bind.annotation.RestController;
 public class AuthController {
 
     private final AuthService authService;
-    private final JwtTokenProvider jwtTokenProvider;
 
     /** 전화번호 존재 여부 확인 */
     @PostMapping("/check-phone")
@@ -140,17 +136,6 @@ public class AuthController {
                 .build();
         response.addHeader("Set-Cookie", cookie.toString());
         return ResponseEntity.ok("로그아웃 완료");
-    }
-
-    /** 비밀번호 변경 */
-    @PutMapping("/change-password")
-    public ResponseEntity<String> changePassword(
-            @RequestHeader("Authorization") String authHeader,
-            @RequestBody AuthDto.ChangePasswordRequest request) {
-        String token = authHeader.replace("Bearer ", "");
-        Long memberId = jwtTokenProvider.getMemberIdFromToken(token);
-        authService.changePassword(memberId, request.currentPassword(), request.newPassword());
-        return ResponseEntity.ok("비밀번호가 변경되었습니다.");
     }
 
     /** 닉네임 중복 체크 */
