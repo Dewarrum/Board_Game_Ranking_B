@@ -2,9 +2,7 @@ package com.board_game_back.Service;
 
 import com.board_game_back.DTO.RankingDto;
 import com.board_game_back.DTO.RankingDto.GameRankingResponse;
-import com.board_game_back.Entity.Member;
 import com.board_game_back.Entity.PlayerGameRating;
-import com.board_game_back.Repository.MemberRepository;
 import com.board_game_back.Repository.PlayerGameRatingRepository;
 import org.springframework.transaction.annotation.Transactional;
 import java.util.ArrayList;
@@ -18,7 +16,6 @@ import org.springframework.stereotype.Service;
 public class RankingService {
 
     private final PlayerGameRatingRepository ratingRepository;
-    private final MemberRepository memberRepository;
 
 
     // 특정 보드게임의 리더보드 데이터 가져오기
@@ -49,25 +46,6 @@ public class RankingService {
                 ));
         }
 
-        return responseList;
-    }
-
-    public List<RankingDto.GlobalRankingResponse> getGlobalRanking() {
-        List<Member> members = memberRepository.findAllByOrderByOverallStatsRatingDesc();
-
-        List<RankingDto.GlobalRankingResponse> responseList = new ArrayList<>();
-        int currentRank = 1;
-
-        for (Member member : members) {
-            if (member.getOverallStats() == null || member.getOverallStats().getRating() == 1500.0) continue;
-
-            responseList.add(new RankingDto.GlobalRankingResponse(
-                currentRank++,
-                member.getId(),
-                member.getNickname(),
-                member.getOverallStats().getRating()
-            ));
-        }
         return responseList;
     }
 

@@ -3,7 +3,6 @@ package com.board_game_back.Service;
 import com.board_game_back.DTO.MatchDto;
 import com.board_game_back.DTO.MatchDto.ResultResponse;
 import com.board_game_back.Entity.BoardGame;
-import com.board_game_back.Entity.GlickoStats;
 import com.board_game_back.Entity.MatchParticipant;
 import com.board_game_back.Entity.MatchRecord;
 import com.board_game_back.Entity.Member;
@@ -106,14 +105,7 @@ public class MatchService {
                 gameRating.addLoseCount();
             }
 
-            member.getOverallStats().update(
-                calcResult.newStats.getRating(),
-                calcResult.newStats.getRatingDeviation(),
-                calcResult.newStats.getVolatility()
-            );
-
             ratingRepository.save(gameRating);
-            memberRepository.save(member);
 
             responseList.add(new MatchDto.ResultResponse(
                 member.getId(), member.getNickname(), participant.getPlacement(), ratingChange
@@ -155,40 +147,13 @@ public class MatchService {
         MatchRecord match = matchRecordRepository.findById(matchId)
             .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 매치입니다."));
 
-        BoardGame game = match.getBoardGame();
+        Long roomId = match.getRoom().getId();
+        Long boardGameId = match.getBoardGame().getId();
 
-        // 2. 기존 참가자들의 ratingChange를 역산해서 점수 되돌리기
-        for (MatchParticipant oldParticipant : match.getParticipants()) {
-            Member member = oldParticipant.getMember();
-            PlayerGameRating gameRating = ratingRepository
-                .findByMemberAndBoardGame(member, game)
-                .orElseThrow();
-
-            double oldChange = oldParticipant.getRatingChange();
-            GlickoStats stats = gameRating.getGameStats();
-            stats.update(
-                stats.getRating() - oldChange,
-                stats.getRatingDeviation(),
-                stats.getVolatility()
-            );
-            ratingRepository.save(gameRating);
-        }
-
-        // 3. 새 순위로 Glicko-2 재계산
-        List<Glicko2Calculator.PlayerResult> calcResults = new ArrayList<>();
+        // 2. 새 participants 생성
         List<MatchParticipant> newParticipants = new ArrayList<>();
-
         for (MatchDto.ParticipantRequest pr : request.participants()) {
             Member member = memberRepository.findById(pr.memberId()).orElseThrow();
-            PlayerGameRating gameRating = ratingRepository
-                .findByMemberAndBoardGame(member, game)
-                .orElseGet(() -> ratingRepository.save(
-                    PlayerGameRating.builder().member(member).boardGame(game).room(match.getRoom()).build()
-                ));
-
-            calcResults.add(new Glicko2Calculator.PlayerResult(
-                member.getId(), pr.placement(), gameRating.getGameStats()
-            ));
             MatchParticipant newMp = new MatchParticipant(match, member, pr.placement());
             if (pr.scoresJson() != null) {
                 newMp.updateScoresJson(pr.scoresJson());
@@ -196,38 +161,22 @@ public class MatchService {
             newParticipants.add(newMp);
         }
 
-        glicko2Calculator.calculateMultiplayerRatings(calcResults);
-
-        List<MatchDto.ResultResponse> responseList = new ArrayList<>();
-
-        for (int i = 0; i < newParticipants.size(); i++) {
-            MatchParticipant participant = newParticipants.get(i);
-            Glicko2Calculator.PlayerResult calcResult = calcResults.get(i);
-            Member member = participant.getMember();
-
-            PlayerGameRating gameRating = ratingRepository
-                .findByMemberAndBoardGame(member, game).orElseThrow();
-
-            double ratingChange = calcResult.newStats.getRating() - gameRating.getGameStats().getRating();
-            participant.updateRatingChange(ratingChange);
-
-            gameRating.getGameStats().update(
-                calcResult.newStats.getRating(),
-                calcResult.newStats.getRatingDeviation(),
-                calcResult.newStats.getVolatility()
-            );
-            ratingRepository.save(gameRating);
-
-            responseList.add(new MatchDto.ResultResponse(
-                member.getId(), member.getNickname(), participant.getPlacement(), ratingChange
-            ));
-        }
-
-        // 4. 기존 참가자 목록 교체 후 저장
+        // 3. participants 교체 후 저장
         match.getParticipants().clear();
         match.getParticipants().addAll(newParticipants);
         matchRecordRepository.save(match);
 
+        // 4. 처음부터 전체 재계산 (롤백 없이 정확한 Glicko-2 적용)
+        recalculateRatings(roomId, boardGameId);
+
+        // 5. 재계산 결과의 ratingChange로 응답 생성
+        List<MatchDto.ResultResponse> responseList = new ArrayList<>();
+        for (MatchParticipant mp : match.getParticipants()) {
+            Member member = mp.getMember();
+            responseList.add(new MatchDto.ResultResponse(
+                member.getId(), member.getNickname(), mp.getPlacement(), mp.getRatingChange()
+            ));
+        }
         return responseList;
     }
 
