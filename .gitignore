@@ -40,3 +40,7 @@ out/
 .env
 .env.*
 *.env
+
+### Spring Boot secrets ###
+src/main/resources/application.properties
+src/main/resources/application-*.properties
