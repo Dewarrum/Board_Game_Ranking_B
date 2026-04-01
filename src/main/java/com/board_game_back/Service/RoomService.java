@@ -117,14 +117,52 @@ public class RoomService {
             .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 방입니다."));
     }
 
-    /** 6. 방 나가기 / 강퇴 (memberId를 방에서 제거) */
+    /** 6. 방 나가기 (방장이면 1등 멤버에게 자동 위임) */
     @Transactional
     public void leaveRoom(Long roomId, Long memberId) {
         RoomMember rm = roomMemberRepository.findByRoomIdAndMemberId(roomId, memberId)
             .orElseThrow(() -> new IllegalArgumentException("해당 방의 멤버가 아닙니다."));
 
         if ("HOST".equals(rm.getRole())) {
-            throw new IllegalStateException("방장은 방을 나갈 수 없습니다. 방 삭제를 이용해주세요.");
+            // 방장 본인 제외한 다른 멤버 목록
+            List<RoomMember> others = roomMemberRepository.findByRoomId(roomId).stream()
+                .filter(m -> !m.getMember().getId().equals(memberId))
+                .collect(Collectors.toList());
+
+            if (others.isEmpty()) {
+                // 혼자 남은 경우 방 전체 삭제
+                deleteRoom(roomId);
+                return;
+            }
+
+            // 방의 게임 ID 조회
+            Long boardGameId = roomRepository.findById(roomId)
+                .map(Room::getBoardGameId)
+                .orElse(null);
+
+            // 랭킹 1등 멤버 선정 (rating 가장 높은 멤버)
+            Member nextHost = null;
+            if (boardGameId != null) {
+                List<PlayerGameRating> ratings = playerGameRatingRepository
+                    .findByRoomIdAndBoardGameIdOrderByPlayedThenRating(roomId, boardGameId);
+                nextHost = ratings.stream()
+                    .filter(r -> !r.getMember().getId().equals(memberId))
+                    .map(PlayerGameRating::getMember)
+                    .findFirst()
+                    .orElse(null);
+            }
+            // 랭킹 없으면 첫 번째 멤버에게 위임
+            if (nextHost == null) {
+                nextHost = others.get(0).getMember();
+            }
+
+            // 위임
+            final Long nextHostId = nextHost.getId();
+            RoomMember nextHostMember = others.stream()
+                .filter(m -> m.getMember().getId().equals(nextHostId))
+                .findFirst().get();
+            nextHostMember.setRole("HOST");
+            roomMemberRepository.save(nextHostMember);
         }
 
         // MatchParticipant에서 해당 멤버 기록 삭제
@@ -151,20 +189,14 @@ public class RoomService {
         roomRepository.delete(room);
     }
 
-    /** 8. 회원 탈퇴 - 방장인 방이 있으면 거부 */
+    /** 8. 회원 탈퇴 - 속한 모든 방에서 leaveRoom 처리 후 계정 삭제 */
     @Transactional
     public void deleteMember(Long memberId) {
-        // 방장인 방이 있으면 탈퇴 불가
-        if (roomMemberRepository.existsByMember_IdAndRole(memberId, "HOST")) {
-            throw new IllegalStateException("방장인 그룹이 있습니다. 그룹을 삭제하거나 위임 후 탈퇴하세요.");
+        // 속한 모든 방에서 순차적으로 나가기 (방장이면 위임 또는 방 삭제)
+        List<RoomMember> myRooms = new java.util.ArrayList<>(roomMemberRepository.findByMemberId(memberId));
+        for (RoomMember rm : myRooms) {
+            leaveRoom(rm.getRoom().getId(), memberId);
         }
-
-        // 모든 그룹의 MatchParticipant 삭제
-        matchParticipantRepository.deleteByMemberId(memberId);
-        // 모든 PlayerGameRating 삭제
-        playerGameRatingRepository.deleteByMember_Id(memberId);
-        // 모든 RoomMember 관계 삭제
-        roomMemberRepository.deleteByMember_Id(memberId);
         // Member 삭제
         memberRepository.deleteById(memberId);
     }
