@@ -36,4 +36,10 @@ List<PlayerGameRating> findByRoomIdAndBoardGameIdOrderByGameStatsRatingDesc(Long
 
     // 방 삭제 시 FK 제거용
     void deleteByRoomId(Long roomId);
+
+    // 방 나가기 시 해당 멤버의 방별 점수 삭제
+    void deleteByMember_IdAndRoom_Id(Long memberId, Long roomId);
+
+    // 회원 탈퇴 시 해당 멤버의 모든 점수 삭제
+    void deleteByMember_Id(Long memberId);
 }

@@ -6,6 +6,7 @@ import com.board_game_back.Entity.PlayerGameRating;
 import com.board_game_back.Entity.Room;
 import com.board_game_back.Entity.RoomMember;
 import com.board_game_back.Repository.BoardGameRepository;
+import com.board_game_back.Repository.MatchParticipantRepository;
 import com.board_game_back.Repository.MatchRecordRepository;
 import com.board_game_back.Repository.MemberRepository;
 import com.board_game_back.Repository.PlayerGameRatingRepository;
@@ -28,6 +29,7 @@ public class RoomService {
     private final PlayerGameRatingRepository playerGameRatingRepository;
     private final BoardGameRepository boardGameRepository;
     private final MatchRecordRepository matchRecordRepository;
+    private final MatchParticipantRepository matchParticipantRepository;
 
     /** 1. 새로운 방 생성 */
     @Transactional
@@ -125,6 +127,11 @@ public class RoomService {
             throw new IllegalStateException("방장은 방을 나갈 수 없습니다. 방 삭제를 이용해주세요.");
         }
 
+        // MatchParticipant에서 해당 멤버 기록 삭제
+        matchParticipantRepository.deleteByMemberIdAndRoomId(memberId, roomId);
+        // PlayerGameRating(랭킹) 삭제
+        playerGameRatingRepository.deleteByMember_IdAndRoom_Id(memberId, roomId);
+        // RoomMember 삭제
         roomMemberRepository.deleteByRoomIdAndMemberId(roomId, memberId);
     }
 
@@ -142,6 +149,24 @@ public class RoomService {
 
         // Room 삭제 (CascadeType.ALL로 RoomMember도 함께 삭제됨)
         roomRepository.delete(room);
+    }
+
+    /** 8. 회원 탈퇴 - 방장인 방이 있으면 거부 */
+    @Transactional
+    public void deleteMember(Long memberId) {
+        // 방장인 방이 있으면 탈퇴 불가
+        if (roomMemberRepository.existsByMember_IdAndRole(memberId, "HOST")) {
+            throw new IllegalStateException("방장인 그룹이 있습니다. 그룹을 삭제하거나 위임 후 탈퇴하세요.");
+        }
+
+        // 모든 그룹의 MatchParticipant 삭제
+        matchParticipantRepository.deleteByMemberId(memberId);
+        // 모든 PlayerGameRating 삭제
+        playerGameRatingRepository.deleteByMember_Id(memberId);
+        // 모든 RoomMember 관계 삭제
+        roomMemberRepository.deleteByMember_Id(memberId);
+        // Member 삭제
+        memberRepository.deleteById(memberId);
     }
 
     /** 초기 LP 설정 (방장만 가능, 매치 기록 없는 멤버만) */

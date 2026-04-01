@@ -5,6 +5,7 @@ import com.board_game_back.Entity.Member;
 import com.board_game_back.Entity.PlayerGameRating;
 import com.board_game_back.Repository.MemberRepository;
 import com.board_game_back.Repository.PlayerGameRatingRepository;
+import com.board_game_back.Service.RoomService;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -12,6 +13,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -27,6 +29,7 @@ public class MemberController {
 
     private final MemberRepository memberRepository;
     private final PlayerGameRatingRepository playerGameRatingRepository;
+    private final RoomService roomService;
 
     // 멤버 조회
     @GetMapping("/{memberId}")
@@ -61,6 +64,17 @@ public class MemberController {
             .collect(Collectors.toList());
 
         return ResponseEntity.ok(new MemberDto.StatsResponse(totalPlay, totalWin, totalLose, games));
+    }
+
+    // 회원 탈퇴
+    @DeleteMapping("/{id}")
+    public ResponseEntity<String> deleteMember(@PathVariable Long id) {
+        try {
+            roomService.deleteMember(id);
+            return ResponseEntity.ok("탈퇴되었습니다.");
+        } catch (IllegalStateException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
 
     // 닉네임 변경

@@ -16,4 +16,10 @@ public interface RoomMemberRepository extends JpaRepository<RoomMember, Long> {
 
     Optional<RoomMember> findByRoomIdAndMemberId(Long roomId, Long memberId);
     void deleteByRoomIdAndMemberId(Long roomId, Long memberId);
+
+    // 회원 탈퇴 시 해당 멤버의 모든 방 멤버 관계 삭제
+    void deleteByMember_Id(Long memberId);
+
+    // HOST 여부 확인 (탈퇴 전 방장 방 존재 체크)
+    boolean existsByMember_IdAndRole(Long memberId, String role);
 }
