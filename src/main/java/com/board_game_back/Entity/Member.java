@@ -53,6 +53,11 @@ public class Member {
         this.nickname = nickname;
     }
 
+    /** 토스 계정 연동 (추후 토스 로그인 도입 시 닉네임 계정에 socialId 연결) */
+    public void linkSocialId(String socialId) {
+        this.socialId = socialId;
+    }
+
     public void updatePassword(String encodedPassword) {
         this.password = encodedPassword;
     }

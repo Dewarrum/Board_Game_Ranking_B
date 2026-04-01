@@ -122,6 +122,47 @@ public class AuthService {
         return jwtTokenProvider.generateAccessToken(member.getId(), member.getRole());
     }
 
+    /** 닉네임 로그인 (로그인/회원가입 통합) */
+    @Transactional
+    public LoginResult nicknameLogin(String nickname) {
+        if (nickname == null || nickname.isBlank()) {
+            throw new IllegalArgumentException("닉네임을 입력해주세요.");
+        }
+        String trimmed = nickname.trim();
+        if (trimmed.length() < 2 || trimmed.length() > 12) {
+            throw new IllegalArgumentException("닉네임은 2~12자 사이여야 합니다.");
+        }
+
+        Member member = memberRepository.findByNickname(trimmed)
+                .orElseGet(() -> memberRepository.save(
+                        Member.builder()
+                                .nickname(trimmed)
+                                .role("USER")
+                                .build()
+                ));
+
+        String accessToken = jwtTokenProvider.generateAccessToken(member.getId(), member.getRole());
+        String refreshToken = jwtTokenProvider.generateRefreshToken(member.getId());
+        return new LoginResult(member, accessToken, refreshToken);
+    }
+
+    /**
+     * 토스 계정 연동 (추후 토스 로그인 도입 시 사용)
+     * 기존 닉네임 계정에 Toss socialId를 연결한다.
+     */
+    @Transactional
+    public LoginResult linkTossAccount(String nickname, String authorizationCode) {
+        Member member = memberRepository.findByNickname(nickname.trim())
+                .orElseThrow(() -> new IllegalArgumentException("해당 닉네임의 계정을 찾을 수 없습니다."));
+
+        if (member.getSocialId() != null) {
+            throw new IllegalArgumentException("이미 토스 계정과 연동된 닉네임입니다.");
+        }
+
+        // TODO: authorizationCode로 Toss socialId 취득 로직 추가 (토스 로그인 도입 시)
+        throw new UnsupportedOperationException("토스 로그인 도입 후 구현 예정");
+    }
+
     /** 닉네임 중복 체크 */
     public boolean isNicknameAvailable(String nickname) {
         return !memberRepository.existsByNickname(nickname);

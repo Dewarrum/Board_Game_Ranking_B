@@ -79,6 +79,21 @@ public class AuthController {
         ));
     }
 
+    /** 닉네임 로그인 (로그인/회원가입 통합) */
+    @PostMapping("/nickname")
+    public ResponseEntity<AuthDto.LoginResponse> nicknameLogin(
+            @RequestBody AuthDto.NicknameLoginRequest request,
+            HttpServletResponse response) {
+        AuthService.LoginResult result = authService.nicknameLogin(request.nickname());
+        setRefreshTokenCookie(response, result.refreshToken());
+        return ResponseEntity.ok(new AuthDto.LoginResponse(
+                result.member().getId(),
+                result.member().getNickname(),
+                result.member().getRole(),
+                result.accessToken()
+        ));
+    }
+
     /** 카카오 소셜 로그인 */
     @PostMapping("/kakao")
     public ResponseEntity<AuthDto.LoginResponse> kakaoLogin(

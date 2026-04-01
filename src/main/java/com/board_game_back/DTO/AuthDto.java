@@ -30,4 +30,10 @@ public class AuthDto {
 
     // 카카오 소셜 로그인
     public record KakaoLoginRequest(String kakaoAccessToken) {}
+
+    // 닉네임 로그인 (로그인/회원가입 통합)
+    public record NicknameLoginRequest(String nickname) {}
+
+    // 토스 계정 연동 (기존 닉네임 계정 → 토스 계정 연결)
+    public record LinkTossRequest(String nickname, String authorizationCode) {}
 }
