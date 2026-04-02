@@ -2,14 +2,10 @@ package com.board_game_back.Controller;
 
 import com.board_game_back.DTO.AuthDto;
 import com.board_game_back.Service.AuthService;
-import jakarta.servlet.http.HttpServletResponse;
-import java.time.Duration;
-import org.springframework.http.ResponseCookie;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -36,16 +32,9 @@ public class AuthController {
     /** 기존 회원 로그인 (전화번호 + 비밀번호) */
     @PostMapping("/login")
     public ResponseEntity<AuthDto.LoginResponse> login(
-            @RequestBody AuthDto.LoginRequest request,
-            HttpServletResponse response) {
+            @RequestBody AuthDto.LoginRequest request) {
         AuthService.LoginResult result = authService.login(request.phoneNumber(), request.password());
-        setRefreshTokenCookie(response, result.refreshToken());
-        return ResponseEntity.ok(new AuthDto.LoginResponse(
-                result.member().getId(),
-                result.member().getNickname(),
-                result.member().getRole(),
-                result.accessToken()
-        ));
+        return ResponseEntity.ok(toLoginResponse(result));
     }
 
     /** OTP 발송 (신규 회원) */
@@ -66,69 +55,41 @@ public class AuthController {
     /** 신규 회원 가입 완료 (닉네임 + 비밀번호) */
     @PostMapping("/register")
     public ResponseEntity<AuthDto.LoginResponse> register(
-            @RequestBody AuthDto.RegisterRequest request,
-            HttpServletResponse response) {
+            @RequestBody AuthDto.RegisterRequest request) {
         AuthService.LoginResult result = authService.register(
                 request.memberId(), request.nickname(), request.password());
-        setRefreshTokenCookie(response, result.refreshToken());
-        return ResponseEntity.ok(new AuthDto.LoginResponse(
-                result.member().getId(),
-                result.member().getNickname(),
-                result.member().getRole(),
-                result.accessToken()
-        ));
+        return ResponseEntity.ok(toLoginResponse(result));
     }
 
     /** 닉네임 로그인 (로그인/회원가입 통합) */
     @PostMapping("/nickname")
     public ResponseEntity<AuthDto.LoginResponse> nicknameLogin(
-            @RequestBody AuthDto.NicknameLoginRequest request,
-            HttpServletResponse response) {
+            @RequestBody AuthDto.NicknameLoginRequest request) {
         AuthService.LoginResult result = authService.nicknameLogin(request.nickname());
-        setRefreshTokenCookie(response, result.refreshToken());
-        return ResponseEntity.ok(new AuthDto.LoginResponse(
-                result.member().getId(),
-                result.member().getNickname(),
-                result.member().getRole(),
-                result.accessToken()
-        ));
+        return ResponseEntity.ok(toLoginResponse(result));
     }
 
     /** 카카오 소셜 로그인 */
     @PostMapping("/kakao")
     public ResponseEntity<AuthDto.LoginResponse> kakaoLogin(
-            @RequestBody AuthDto.KakaoLoginRequest request,
-            HttpServletResponse response) {
+            @RequestBody AuthDto.KakaoLoginRequest request) {
         AuthService.LoginResult result = authService.kakaoLogin(request.kakaoAccessToken());
-        setRefreshTokenCookie(response, result.refreshToken());
-        return ResponseEntity.ok(new AuthDto.LoginResponse(
-                result.member().getId(),
-                result.member().getNickname(),
-                result.member().getRole(),
-                result.accessToken()
-        ));
+        return ResponseEntity.ok(toLoginResponse(result));
     }
 
     /** 관리자 로그인 */
     @PostMapping("/admin-login")
     public ResponseEntity<AuthDto.LoginResponse> adminLogin(
-            @RequestBody AuthDto.AdminLoginRequest request,
-            HttpServletResponse response) {
+            @RequestBody AuthDto.AdminLoginRequest request) {
         AuthService.LoginResult result = authService.adminLogin(request.username(), request.password());
-        setRefreshTokenCookie(response, result.refreshToken());
-        return ResponseEntity.ok(new AuthDto.LoginResponse(
-                result.member().getId(),
-                result.member().getNickname(),
-                result.member().getRole(),
-                result.accessToken()
-        ));
+        return ResponseEntity.ok(toLoginResponse(result));
     }
 
-    /** Access Token 갱신 */
+    /** Access Token 갱신 - body에서 refreshToken 수신 (iOS 쿠키 차단 대응) */
     @PostMapping("/refresh")
-    public ResponseEntity<?> refresh(
-            @CookieValue(value = "refreshToken", required = false) String refreshToken) {
-        if (refreshToken == null) {
+    public ResponseEntity<?> refresh(@RequestBody(required = false) AuthDto.RefreshRequest request) {
+        String refreshToken = request != null ? request.refreshToken() : null;
+        if (refreshToken == null || refreshToken.isBlank()) {
             return ResponseEntity.status(401).body("Refresh Token이 없습니다.");
         }
         try {
@@ -139,17 +100,9 @@ public class AuthController {
         }
     }
 
-    /** 로그아웃 */
+    /** 로그아웃 - 클라이언트에서 localStorage 삭제로 처리 */
     @PostMapping("/logout")
-    public ResponseEntity<String> logout(HttpServletResponse response) {
-        ResponseCookie cookie = ResponseCookie.from("refreshToken", "")
-                .httpOnly(true)
-                .secure(true)
-                .path("/")
-                .maxAge(0)
-                .sameSite("None")
-                .build();
-        response.addHeader("Set-Cookie", cookie.toString());
+    public ResponseEntity<String> logout() {
         return ResponseEntity.ok("로그아웃 완료");
     }
 
@@ -164,14 +117,13 @@ public class AuthController {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("message", e.getMessage()));
     }
 
-    private void setRefreshTokenCookie(HttpServletResponse response, String refreshToken) {
-        ResponseCookie cookie = ResponseCookie.from("refreshToken", refreshToken)
-                .httpOnly(true)
-                .secure(true)
-                .path("/")
-                .maxAge(Duration.ofDays(7))
-                .sameSite("None")
-                .build();
-        response.addHeader("Set-Cookie", cookie.toString());
+    private AuthDto.LoginResponse toLoginResponse(AuthService.LoginResult result) {
+        return new AuthDto.LoginResponse(
+                result.member().getId(),
+                result.member().getNickname(),
+                result.member().getRole(),
+                result.accessToken(),
+                result.refreshToken()
+        );
     }
 }

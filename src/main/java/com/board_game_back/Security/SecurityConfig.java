@@ -1,11 +1,8 @@
 package com.board_game_back.Security;
 
-import java.util.Arrays;
-import java.util.ArrayList;
 import java.util.List;
 import org.springframework.http.HttpMethod;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -25,21 +22,16 @@ public class SecurityConfig {
 
     private final JwtAuthFilter jwtAuthFilter;
 
-    @Value("${cors.allowed-origins:}")
-    private String extraOrigins;
-
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        List<String> origins = new ArrayList<>(List.of(
+        config.setAllowedOrigins(List.of(
             "http://localhost:5173",
             "http://localhost:3000",
-            "https://boardup.pages.dev"
+            "https://boardup.pages.dev",
+            "https://my-boardup.apps.tossmini.com",
+            "https://my-boardup.private-apps.tossmini.com"
         ));
-        if (extraOrigins != null && !extraOrigins.isBlank()) {
-            origins.addAll(Arrays.asList(extraOrigins.split(",")));
-        }
-        config.setAllowedOrigins(origins);
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
         config.setAllowCredentials(true);

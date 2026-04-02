@@ -20,7 +20,10 @@ public class AuthDto {
     public record LoginRequest(String phoneNumber, String password) {}
 
     // 로그인 성공 응답
-    public record LoginResponse(Long memberId, String nickname, String role, String accessToken) {}
+    public record LoginResponse(Long memberId, String nickname, String role, String accessToken, String refreshToken) {}
+
+    // Refresh Token 갱신 요청
+    public record RefreshRequest(String refreshToken) {}
 
     // 관리자 로그인
     public record AdminLoginRequest(String username, String password) {}

@@ -7,7 +7,6 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
-import java.time.Duration;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -15,7 +14,6 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
-import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
@@ -118,24 +116,13 @@ public class OAuth2AuthController {
 
         String jwtAccessToken = jwtTokenProvider.generateAccessToken(member.getId(), member.getRole());
         String refreshToken = jwtTokenProvider.generateRefreshToken(member.getId());
-        setRefreshTokenCookie(response, refreshToken);
 
         String encodedNickname = URLEncoder.encode(member.getNickname(), StandardCharsets.UTF_8);
         response.sendRedirect(frontendUrl + "/oauth-callback"
                 + "?token=" + jwtAccessToken
                 + "&userId=" + member.getId()
                 + "&nickname=" + encodedNickname
-                + "&role=" + member.getRole());
-    }
-
-    private void setRefreshTokenCookie(HttpServletResponse response, String refreshToken) {
-        ResponseCookie cookie = ResponseCookie.from("refreshToken", refreshToken)
-                .httpOnly(true)
-                .secure(true)
-                .path("/")
-                .maxAge(Duration.ofDays(7))
-                .sameSite("None")
-                .build();
-        response.addHeader("Set-Cookie", cookie.toString());
+                + "&role=" + member.getRole()
+                + "&refreshToken=" + refreshToken);
     }
 }
