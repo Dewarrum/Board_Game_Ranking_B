@@ -69,14 +69,14 @@ public class RoomService {
         Member member = memberRepository.findById(memberId)
             .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 유저입니다."));
 
-        boolean isAlreadyMember = roomMemberRepository.findByRoomId(room.getId())
-            .stream()
-            .anyMatch(rm -> rm.getMember().getId().equals(memberId));
+        boolean isAlreadyMember = roomMemberRepository.findByRoomIdAndMemberId(room.getId(), memberId).isPresent();
 
-        if (!isAlreadyMember) {
-            RoomMember roomMember = new RoomMember(room, member, "MEMBER");
-            roomMemberRepository.save(roomMember);
+        if (isAlreadyMember) {
+            return room;
         }
+
+        RoomMember roomMember = new RoomMember(room, member, "MEMBER");
+        roomMemberRepository.save(roomMember);
 
         // PlayerGameRating 없으면 생성 (랭킹에 바로 노출)
         if (room.getBoardGameId() != null) {
