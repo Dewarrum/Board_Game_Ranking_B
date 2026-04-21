@@ -12,7 +12,9 @@ import com.board_game_back.Repository.MemberRepository;
 import com.board_game_back.Repository.PlayerGameRatingRepository;
 import com.board_game_back.Repository.RoomMemberRepository;
 import com.board_game_back.Repository.RoomRepository;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
@@ -140,27 +142,27 @@ public class RoomService {
                 .map(Room::getBoardGameId)
                 .orElse(null);
 
-            // 랭킹 1등 멤버 선정 (rating 가장 높은 멤버)
-            Member nextHost = null;
+            // 실제 방 멤버 중에서만 다음 방장을 고른다.
+            RoomMember nextHostMember = null;
             if (boardGameId != null) {
                 List<PlayerGameRating> ratings = playerGameRatingRepository
                     .findByRoomIdAndBoardGameIdOrderByPlayedThenRating(roomId, boardGameId);
-                nextHost = ratings.stream()
-                    .filter(r -> !r.getMember().getId().equals(memberId))
-                    .map(PlayerGameRating::getMember)
-                    .findFirst()
+                Map<Long, Integer> rankingOrder = new HashMap<>();
+                for (int i = 0; i < ratings.size(); i++) {
+                    rankingOrder.put(ratings.get(i).getMember().getId(), i);
+                }
+                nextHostMember = others.stream()
+                    .min(java.util.Comparator.comparingInt(
+                        other -> rankingOrder.getOrDefault(other.getMember().getId(), Integer.MAX_VALUE)
+                    ))
                     .orElse(null);
             }
-            // 랭킹 없으면 첫 번째 멤버에게 위임
-            if (nextHost == null) {
-                nextHost = others.get(0).getMember();
+
+            // 랭킹이 없거나 랭킹 데이터가 꼬였으면 첫 번째 멤버에게 위임
+            if (nextHostMember == null) {
+                nextHostMember = others.get(0);
             }
 
-            // 위임
-            final Long nextHostId = nextHost.getId();
-            RoomMember nextHostMember = others.stream()
-                .filter(m -> m.getMember().getId().equals(nextHostId))
-                .findFirst().get();
             nextHostMember.setRole("HOST");
             roomMemberRepository.save(nextHostMember);
         }

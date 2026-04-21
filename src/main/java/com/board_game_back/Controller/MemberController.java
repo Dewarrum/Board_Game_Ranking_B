@@ -10,6 +10,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -25,6 +27,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/members")
 @RequiredArgsConstructor
 @CrossOrigin(origins = "*")
+@Slf4j
 public class MemberController {
 
     private final MemberRepository memberRepository;
@@ -70,10 +73,21 @@ public class MemberController {
     @DeleteMapping("/{id}")
     public ResponseEntity<String> deleteMember(@PathVariable Long id) {
         try {
+            if (!memberRepository.existsById(id)) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("존재하지 않는 회원입니다.");
+            }
             roomService.deleteMember(id);
             return ResponseEntity.ok("탈퇴되었습니다.");
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
         } catch (IllegalStateException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (Exception e) {
+            log.error("회원 탈퇴 실패 memberId={}", id, e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(e.getMessage() != null && !e.getMessage().isBlank()
+                    ? e.getMessage()
+                    : "회원 탈퇴 처리 중 서버 오류가 발생했습니다.");
         }
     }
 
