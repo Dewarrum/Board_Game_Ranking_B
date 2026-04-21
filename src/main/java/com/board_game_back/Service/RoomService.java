@@ -197,6 +197,12 @@ public class RoomService {
         for (RoomMember rm : myRooms) {
             leaveRoom(rm.getRoom().getId(), memberId);
         }
+
+        // 비정상 데이터가 남아 있어도 탈퇴가 막히지 않도록 한 번 더 정리
+        matchParticipantRepository.deleteByMemberId(memberId);
+        playerGameRatingRepository.deleteByMember_Id(memberId);
+        roomMemberRepository.deleteByMember_Id(memberId);
+
         // Member 삭제
         memberRepository.deleteById(memberId);
     }
