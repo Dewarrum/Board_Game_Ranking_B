@@ -29,12 +29,16 @@ public class SecurityConfig {
             "http://localhost:5173",
             "http://localhost:3000",
             "https://boardup.pages.dev",
+            "https://yadarank.com",
+            "https://www.yadarank.com",
             "https://my-boardup.apps.tossmini.com",
             "https://my-boardup.private-apps.tossmini.com"
         ));
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
+        config.setExposedHeaders(List.of("Authorization"));
         config.setAllowCredentials(true);
+        config.setMaxAge(3600L);
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config);
         return source;
