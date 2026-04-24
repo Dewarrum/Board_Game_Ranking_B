@@ -92,8 +92,9 @@ public class MatchService {
                 calcResult.newStats.getRating() - gameRating.getGameStats().getRating();
             participant.updateRatingChange(ratingChange);
 
+            double newRating = calcResult.newStats.getRating();
             gameRating.getGameStats().update(
-                calcResult.newStats.getRating(),
+                newRating,
                 calcResult.newStats.getRatingDeviation(),
                 calcResult.newStats.getVolatility()
             );
@@ -103,6 +104,13 @@ public class MatchService {
                 gameRating.addWinCount();
             } else {
                 gameRating.addLoseCount();
+            }
+
+            if (newRating > member.getOverallStats().getRating()) {
+                member.getOverallStats().update(newRating,
+                    calcResult.newStats.getRatingDeviation(),
+                    calcResult.newStats.getVolatility());
+                memberRepository.save(member);
             }
 
             ratingRepository.save(gameRating);
@@ -261,5 +269,19 @@ public class MatchService {
         }
 
         ratingRepository.saveAll(ratingByMemberId.values());
+
+        // member.overallStats를 해당 멤버의 전체 최고 rating으로 갱신
+        for (PlayerGameRating gr : ratingByMemberId.values()) {
+            Member member = gr.getMember();
+            double memberMaxRating = ratingRepository.findPlayedByMemberId(member.getId())
+                .stream()
+                .mapToDouble(r -> r.getGameStats().getRating())
+                .max()
+                .orElse(1500.0);
+            member.getOverallStats().update(memberMaxRating,
+                member.getOverallStats().getRatingDeviation(),
+                member.getOverallStats().getVolatility());
+            memberRepository.save(member);
+        }
     }
 }

@@ -40,4 +40,8 @@ out/
 .env
 .env.*
 *.env
+application-local.properties
+
+### Local DB ###
+data/
 

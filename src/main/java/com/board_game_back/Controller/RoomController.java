@@ -21,6 +21,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -120,7 +121,19 @@ public class RoomController {
         return ResponseEntity.ok(matchService.getMatchHistory(roomId));
     }
 
-    /** 10. 초기 LP 설정 (방장만) - PUT /api/rooms/{roomId}/members/{memberId}/rating */
+    /** 10. 방 이름 수정 (방장만) - PATCH /api/rooms/{roomId}/name */
+    @PatchMapping("/{roomId}/name")
+    public ResponseEntity<String> updateRoomName(
+            @PathVariable Long roomId,
+            @RequestBody java.util.Map<String, Object> body) {
+        Long requesterId = Long.valueOf(body.get("requesterId").toString());
+        String newName = body.get("roomName").toString().trim();
+        if (newName.isBlank()) return ResponseEntity.badRequest().body("방 이름을 입력해주세요.");
+        roomService.updateRoomName(roomId, requesterId, newName);
+        return ResponseEntity.ok("방 이름이 변경되었습니다.");
+    }
+
+    /** 11. 초기 LP 설정 (방장만) - PUT /api/rooms/{roomId}/members/{memberId}/rating */
     @PutMapping("/{roomId}/members/{memberId}/rating")
     public ResponseEntity<String> updateMemberRating(
             @PathVariable Long roomId,
