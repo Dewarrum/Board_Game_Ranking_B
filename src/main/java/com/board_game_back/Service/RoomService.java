@@ -33,7 +33,9 @@ public class RoomService {
     private final MatchRecordRepository matchRecordRepository;
     private final MatchParticipantRepository matchParticipantRepository;
 
-    /** 1. 새로운 방 생성 */
+    /**
+     * 1. 새로운 방 생성
+     */
     @Transactional
     public Room createRoom(String roomName, Long memberId, Long boardGameId) {
         Member member = memberRepository.findById(memberId)
@@ -53,7 +55,8 @@ public class RoomService {
                     .findByMemberAndBoardGameAndRoom(member, game, savedRoom).isPresent();
                 if (!exists) {
                     playerGameRatingRepository.save(
-                        PlayerGameRating.builder().member(member).boardGame(game).room(savedRoom).build()
+                        PlayerGameRating.builder().member(member).boardGame(game).room(savedRoom)
+                            .build()
                     );
                 }
             });
@@ -62,7 +65,9 @@ public class RoomService {
         return savedRoom;
     }
 
-    /** 2. 초대 코드로 방 가입 */
+    /**
+     * 2. 초대 코드로 방 가입
+     */
     @Transactional
     public Room joinRoom(String inviteCode, Long memberId) {
         Room room = roomRepository.findByInviteCode(inviteCode)
@@ -71,7 +76,8 @@ public class RoomService {
         Member member = memberRepository.findById(memberId)
             .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 유저입니다."));
 
-        boolean isAlreadyMember = roomMemberRepository.findByRoomIdAndMemberId(room.getId(), memberId).isPresent();
+        boolean isAlreadyMember = roomMemberRepository.findByRoomIdAndMemberId(room.getId(),
+            memberId).isPresent();
 
         if (isAlreadyMember) {
             return room;
@@ -96,7 +102,9 @@ public class RoomService {
         return room;
     }
 
-    /** 3. 내가 속한 방 목록 조회 */
+    /**
+     * 3. 내가 속한 방 목록 조회
+     */
     @Transactional(readOnly = true)
     public List<Room> getMyRooms(Long memberId) {
         return roomMemberRepository.findByMemberId(memberId).stream()
@@ -104,7 +112,9 @@ public class RoomService {
             .collect(Collectors.toList());
     }
 
-    /** 4. 특정 방의 모든 멤버 조회 */
+    /**
+     * 4. 특정 방의 모든 멤버 조회
+     */
     @Transactional(readOnly = true)
     public List<Member> getMembersInRoom(Long roomId) {
         return roomMemberRepository.findByRoomId(roomId).stream()
@@ -112,14 +122,29 @@ public class RoomService {
             .collect(Collectors.toList());
     }
 
-    /** 5. 특정 방 상세 정보 조회 */
-    @Transactional(readOnly = true)
+    /**
+     * 5. 특정 방 상세 정보 조회
+     */
+    @Transactional
+    public void updateRoomName(Long roomId, Long requesterId, String newName) {
+        RoomMember rm = roomMemberRepository.findByRoomIdAndMemberId(roomId, requesterId)
+            .orElseThrow(() -> new IllegalArgumentException("방 멤버가 아닙니다."));
+        if (!"HOST".equals(rm.getRole())) {
+            throw new IllegalStateException("방장만 수정할 수 있습니다.");
+        }
+        Room room = roomRepository.findById(roomId)
+            .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 방입니다."));
+        room.setName(newName);
+    }
+
     public Room getRoomById(Long roomId) {
         return roomRepository.findById(roomId)
             .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 방입니다."));
     }
 
-    /** 6. 방 나가기 (방장이면 1등 멤버에게 자동 위임) */
+    /**
+     * 6. 방 나가기 (방장이면 1등 멤버에게 자동 위임)
+     */
     @Transactional
     public void leaveRoom(Long roomId, Long memberId) {
         RoomMember rm = roomMemberRepository.findByRoomIdAndMemberId(roomId, memberId)
@@ -153,7 +178,8 @@ public class RoomService {
                 }
                 nextHostMember = others.stream()
                     .min(java.util.Comparator.comparingInt(
-                        other -> rankingOrder.getOrDefault(other.getMember().getId(), Integer.MAX_VALUE)
+                        other -> rankingOrder.getOrDefault(other.getMember().getId(),
+                            Integer.MAX_VALUE)
                     ))
                     .orElse(null);
             }
@@ -175,7 +201,9 @@ public class RoomService {
         roomMemberRepository.deleteByRoomIdAndMemberId(roomId, memberId);
     }
 
-    /** 7. 방 삭제 (방장만 가능) */
+    /**
+     * 7. 방 삭제 (방장만 가능)
+     */
     @Transactional
     public void deleteRoom(Long roomId) {
         Room room = roomRepository.findById(roomId)
@@ -191,11 +219,14 @@ public class RoomService {
         roomRepository.delete(room);
     }
 
-    /** 8. 회원 탈퇴 - 속한 모든 방에서 leaveRoom 처리 후 계정 삭제 */
+    /**
+     * 8. 회원 탈퇴 - 속한 모든 방에서 leaveRoom 처리 후 계정 삭제
+     */
     @Transactional
     public void deleteMember(Long memberId) {
         // 속한 모든 방에서 순차적으로 나가기 (방장이면 위임 또는 방 삭제)
-        List<RoomMember> myRooms = new java.util.ArrayList<>(roomMemberRepository.findByMemberId(memberId));
+        List<RoomMember> myRooms = new java.util.ArrayList<>(
+            roomMemberRepository.findByMemberId(memberId));
         for (RoomMember rm : myRooms) {
             leaveRoom(rm.getRoom().getId(), memberId);
         }
@@ -209,18 +240,22 @@ public class RoomService {
         memberRepository.deleteById(memberId);
     }
 
-    /** 초기 LP 설정 (방장만 가능, 매치 기록 없는 멤버만) */
+    /**
+     * 초기 LP 설정 (방장만 가능, 매치 기록 없는 멤버만)
+     */
     @Transactional
     public void updateMemberRating(Long roomId, Long memberId, Long requesterId, double rating) {
         // 1. 요청자가 방장인지 확인
-        RoomMember requesterMember = roomMemberRepository.findByRoomIdAndMemberId(roomId, requesterId)
+        RoomMember requesterMember = roomMemberRepository.findByRoomIdAndMemberId(roomId,
+                requesterId)
             .orElseThrow(() -> new IllegalArgumentException("방 멤버가 아닙니다."));
         if (!"HOST".equals(requesterMember.getRole())) {
             throw new IllegalStateException("방장만 점수를 수정할 수 있습니다.");
         }
 
         // 2. 대상 멤버의 PlayerGameRating 조회
-        com.board_game_back.Entity.PlayerGameRating pgr = playerGameRatingRepository.findByMember_IdAndRoom_Id(memberId, roomId)
+        com.board_game_back.Entity.PlayerGameRating pgr = playerGameRatingRepository.findByMember_IdAndRoom_Id(
+                memberId, roomId)
             .orElseThrow(() -> new IllegalArgumentException("해당 멤버의 점수 정보가 없습니다."));
 
         // 3. 매치 기록이 있으면 수정 불가
