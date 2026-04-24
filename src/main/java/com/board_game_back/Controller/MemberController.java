@@ -58,7 +58,6 @@ public class MemberController {
         int totalPlay = ratings.stream().mapToInt(PlayerGameRating::getPlayCount).sum();
         int totalWin  = ratings.stream().mapToInt(PlayerGameRating::getWinCount).sum();
         int totalLose = ratings.stream().mapToInt(PlayerGameRating::getLoseCount).sum();
-
         List<MemberDto.GameStatItem> games = ratings.stream()
             .map(r -> new MemberDto.GameStatItem(
                 r.getBoardGame().getName(),
