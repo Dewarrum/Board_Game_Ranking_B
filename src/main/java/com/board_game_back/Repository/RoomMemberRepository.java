@@ -19,4 +19,8 @@ public interface RoomMemberRepository extends JpaRepository<RoomMember, Long> {
 
     // 회원 탈퇴 시 해당 멤버의 모든 방 멤버 관계 삭제
     void deleteByMember_Id(Long memberId);
+
+    @org.springframework.data.jpa.repository.Query(
+        "SELECT COUNT(DISTINCT rm.member.id) FROM RoomMember rm WHERE rm.room.communityId = :communityId")
+    long countDistinctMemberByCommunityId(@org.springframework.data.repository.query.Param("communityId") Long communityId);
 }

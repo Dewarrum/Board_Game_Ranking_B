@@ -30,6 +30,10 @@ public class Room {
 
     private Long boardGameId; // 방에 고정된 게임
 
+    private Long communityId;
+
+    private boolean sessionActive = false;
+
     @OneToMany(mappedBy = "room", cascade = CascadeType.ALL)
     private List<RoomMember> roomMembers = new ArrayList<>();
 

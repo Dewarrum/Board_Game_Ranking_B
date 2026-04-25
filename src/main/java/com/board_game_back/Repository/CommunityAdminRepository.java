@@ -1,0 +1,17 @@
+package com.board_game_back.Repository;
+
+import com.board_game_back.Entity.CommunityAdmin;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+import java.util.List;
+
+public interface CommunityAdminRepository extends JpaRepository<CommunityAdmin, Long> {
+
+    @Query("SELECT ca FROM CommunityAdmin ca JOIN FETCH ca.member WHERE ca.community.id = :communityId")
+    List<CommunityAdmin> findByCommunityId(@Param("communityId") Long communityId);
+
+    boolean existsByCommunityIdAndMemberId(Long communityId, Long memberId);
+
+    int countByCommunityId(Long communityId);
+}
