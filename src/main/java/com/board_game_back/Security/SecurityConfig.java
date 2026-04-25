@@ -57,6 +57,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/auth/kakao/**").permitAll()
                 .requestMatchers("/api/auth/google/**").permitAll()
                 .requestMatchers("/oauth2/**").permitAll()
+                .requestMatchers("/ws/**").permitAll()
                 .requestMatchers("/api/health").permitAll()
                 .requestMatchers("/api/images/**").permitAll()
                 .requestMatchers("/api/games/**").permitAll()
