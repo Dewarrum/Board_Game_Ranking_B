@@ -14,6 +14,8 @@ public interface RoomMemberRepository extends JpaRepository<RoomMember, Long> {
     @org.springframework.data.jpa.repository.Query("SELECT rm FROM RoomMember rm JOIN FETCH rm.member WHERE rm.room.id = :roomId")
     List<RoomMember> findByRoomId(@org.springframework.data.repository.query.Param("roomId") Long roomId);
 
+    long countByRoomId(Long roomId);
+
     Optional<RoomMember> findByRoomIdAndMemberId(Long roomId, Long memberId);
     void deleteByRoomIdAndMemberId(Long roomId, Long memberId);
 

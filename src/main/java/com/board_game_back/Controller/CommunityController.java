@@ -53,6 +53,14 @@ public class CommunityController {
         return ResponseEntity.ok(communityService.getCommunityMembers(communityId));
     }
 
+    @DeleteMapping("/{communityId}/members/{memberId}")
+    public ResponseEntity<Void> removeCommunityMember(
+            @PathVariable Long communityId,
+            @PathVariable Long memberId) {
+        communityService.removeCommunityMember(communityId, memberId);
+        return ResponseEntity.noContent().build();
+    }
+
     @GetMapping("/{communityId}/rooms")
     public ResponseEntity<List<CommunityDto.RoomResponse>> getCommunityRooms(
             @PathVariable Long communityId,
