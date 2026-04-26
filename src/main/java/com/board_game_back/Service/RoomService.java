@@ -6,16 +6,19 @@ import com.board_game_back.Entity.PlayerGameRating;
 import com.board_game_back.Entity.Room;
 import com.board_game_back.Entity.RoomMember;
 import com.board_game_back.Repository.BoardGameRepository;
+import com.board_game_back.Repository.CommunityAdminRepository;
 import com.board_game_back.Repository.MatchParticipantRepository;
 import com.board_game_back.Repository.MatchRecordRepository;
 import com.board_game_back.Repository.MemberRepository;
 import com.board_game_back.Repository.PlayerGameRatingRepository;
 import com.board_game_back.Repository.RoomMemberRepository;
 import com.board_game_back.Repository.RoomRepository;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
+import com.board_game_back.Utils.InviteCodeUtil;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -32,17 +35,23 @@ public class RoomService {
     private final BoardGameRepository boardGameRepository;
     private final MatchRecordRepository matchRecordRepository;
     private final MatchParticipantRepository matchParticipantRepository;
+    private final CommunityAdminRepository communityAdminRepository;
 
     /**
      * 1. 새로운 방 생성
      */
     @Transactional
-    public Room createRoom(String roomName, Long memberId, Long boardGameId) {
+    public Room createRoom(String roomName, Long memberId, Long boardGameId, Long communityId) {
         Member member = memberRepository.findById(memberId)
             .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 유저입니다."));
 
-        String inviteCode = UUID.randomUUID().toString().substring(0, 6).toUpperCase();
+        if (communityId != null && !communityAdminRepository.existsByCommunityIdAndMemberId(communityId, memberId)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "커뮤니티 어드민만 그룹을 만들 수 있습니다.");
+        }
+
+        String inviteCode = InviteCodeUtil.generate();
         Room room = new Room(roomName, inviteCode, boardGameId);
+        if (communityId != null) room.setCommunityId(communityId);
         Room savedRoom = roomRepository.save(room);
 
         RoomMember roomMember = new RoomMember(savedRoom, member, "HOST");
