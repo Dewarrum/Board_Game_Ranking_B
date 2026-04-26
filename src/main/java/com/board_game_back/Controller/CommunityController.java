@@ -48,6 +48,11 @@ public class CommunityController {
         return ResponseEntity.ok(communityService.getCommunityDetail(communityId));
     }
 
+    @GetMapping("/{communityId}/members")
+    public ResponseEntity<List<CommunityDto.MemberInfo>> getCommunityMembers(@PathVariable Long communityId) {
+        return ResponseEntity.ok(communityService.getCommunityMembers(communityId));
+    }
+
     @GetMapping("/{communityId}/rooms")
     public ResponseEntity<List<CommunityDto.RoomResponse>> getCommunityRooms(
             @PathVariable Long communityId,

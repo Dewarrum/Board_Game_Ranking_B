@@ -184,6 +184,13 @@ public class CommunityService {
     }
 
     @Transactional(readOnly = true)
+    public List<CommunityDto.MemberInfo> getCommunityMembers(Long communityId) {
+        return communityMemberRepository.findByCommunityId(communityId).stream()
+            .map(cm -> new CommunityDto.MemberInfo(cm.getMember().getId(), cm.getMember().getNickname()))
+            .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
     public List<CommunityDto.Response> getMyCommunitiesList(Long memberId) {
         return communityRepository.findAllByCreatedBy(memberId)
             .stream()

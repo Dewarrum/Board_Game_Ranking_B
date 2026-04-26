@@ -62,4 +62,9 @@ public class CommunityDto {
         String inviteCode,
         Long memberId
     ) {}
+
+    public record MemberInfo(
+        Long memberId,
+        String nickname
+    ) {}
 }

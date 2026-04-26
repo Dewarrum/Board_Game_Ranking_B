@@ -19,5 +19,7 @@ public interface CommunityMemberRepository extends JpaRepository<CommunityMember
     @Query("SELECT cm.community.id FROM CommunityMember cm WHERE cm.member.id = :memberId")
     List<Long> findCommunityIdsByMemberId(@Param("memberId") Long memberId);
 
+    List<CommunityMember> findByCommunityId(Long communityId);
+
     void deleteByCommunityId(Long communityId);
 }
