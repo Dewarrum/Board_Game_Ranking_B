@@ -27,7 +27,8 @@ public class CommunityDto {
         String status,
         long memberCount,
         int groupCount,
-        List<AdminInfo> admins
+        List<AdminInfo> admins,
+        String inviteCode
     ) {}
 
     public record AdminInfo(
@@ -43,7 +44,8 @@ public class CommunityDto {
         String status,
         int groupCount,
         long memberCount,
-        List<AdminInfo> admins
+        List<AdminInfo> admins,
+        String inviteCode
     ) {}
 
     public record RoomResponse(
@@ -52,6 +54,12 @@ public class CommunityDto {
         String inviteCode,
         Long boardGameId,
         String imageUrl,
-        boolean sessionActive
+        boolean sessionActive,
+        boolean isMember
+    ) {}
+
+    public record JoinRequest(
+        String inviteCode,
+        Long memberId
     ) {}
 }

@@ -39,7 +39,7 @@ public class RoomController {
     /** 1. 방 만들기 */
     @PostMapping
     public ResponseEntity<RoomDto.Response> createRoom(@RequestBody RoomDto.CreateRequest request) {
-        Room room = roomService.createRoom(request.roomName(), request.memberId(), request.boardGameId());
+        Room room = roomService.createRoom(request.roomName(), request.memberId(), request.boardGameId(), request.communityId());
         return ResponseEntity.ok(
             new RoomDto.Response(room.getId(), room.getName(), room.getInviteCode(), room.getBoardGameId()));
     }
