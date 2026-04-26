@@ -24,7 +24,10 @@ public class CommunityDto {
         String name,
         String region,
         String imageUrl,
-        String status
+        String status,
+        long memberCount,
+        int groupCount,
+        List<AdminInfo> admins
     ) {}
 
     public record AdminInfo(

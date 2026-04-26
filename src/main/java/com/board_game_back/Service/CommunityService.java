@@ -144,7 +144,31 @@ public class CommunityService {
         communityRepository.delete(community);
     }
 
+    @Transactional(readOnly = true)
+    public List<CommunityDto.Response> getJoinedCommunities(Long memberId) {
+        return roomMemberRepository.findDistinctCommunityIdsByMemberId(memberId).stream()
+            .distinct()
+            .flatMap(id -> communityRepository.findById(id).stream())
+            .filter(c -> !c.getCreatedBy().equals(memberId))
+            .map(this::toResponse)
+            .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public List<CommunityDto.Response> getMyCommunitiesList(Long memberId) {
+        return communityRepository.findAllByCreatedBy(memberId)
+            .stream()
+            .map(this::toResponse)
+            .collect(Collectors.toList());
+    }
+
     private CommunityDto.Response toResponse(Community c) {
-        return new CommunityDto.Response(c.getId(), c.getName(), c.getRegion(), c.getImageUrl(), c.getStatus());
+        long memberCount = roomMemberRepository.countDistinctMemberByCommunityId(c.getId());
+        int groupCount = (int) roomRepository.countByCommunityId(c.getId());
+        List<CommunityDto.AdminInfo> admins = communityAdminRepository.findByCommunityId(c.getId())
+            .stream()
+            .map(ca -> new CommunityDto.AdminInfo(ca.getMember().getId(), ca.getMember().getNickname()))
+            .collect(Collectors.toList());
+        return new CommunityDto.Response(c.getId(), c.getName(), c.getRegion(), c.getImageUrl(), c.getStatus(), memberCount, groupCount, admins);
     }
 }

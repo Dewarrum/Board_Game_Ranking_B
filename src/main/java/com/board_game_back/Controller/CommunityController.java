@@ -28,6 +28,16 @@ public class CommunityController {
         return ResponseEntity.ok(response);
     }
 
+    @GetMapping("/my/list/{memberId}")
+    public ResponseEntity<List<CommunityDto.Response>> getMyCommunitiesList(@PathVariable Long memberId) {
+        return ResponseEntity.ok(communityService.getMyCommunitiesList(memberId));
+    }
+
+    @GetMapping("/joined/{memberId}")
+    public ResponseEntity<List<CommunityDto.Response>> getJoinedCommunities(@PathVariable Long memberId) {
+        return ResponseEntity.ok(communityService.getJoinedCommunities(memberId));
+    }
+
     @GetMapping("/{communityId}")
     public ResponseEntity<CommunityDto.DetailResponse> getCommunityDetail(@PathVariable Long communityId) {
         return ResponseEntity.ok(communityService.getCommunityDetail(communityId));
