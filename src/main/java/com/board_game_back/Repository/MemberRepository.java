@@ -23,4 +23,6 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
     boolean existsByNickname(String nickname);
 
     List<Member> findAllByOrderByOverallStatsRatingDesc();
+
+    List<Member> findByNicknameContainingIgnoreCase(String nickname);
 }
