@@ -18,7 +18,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.UUID;
+import com.board_game_back.Utils.InviteCodeUtil;
 import java.util.stream.Collectors;
 
 @Service
@@ -35,7 +35,7 @@ public class CommunityService {
 
     @Transactional
     public CommunityDto.Response createCommunity(CommunityDto.CreateRequest req) {
-        String inviteCode = UUID.randomUUID().toString().substring(0, 6).toUpperCase();
+        String inviteCode = InviteCodeUtil.generate();
         Community community = new Community(req.name(), req.region(), req.imageUrl(), req.createdBy());
         community.setInviteCode(inviteCode);
         communityRepository.save(community);

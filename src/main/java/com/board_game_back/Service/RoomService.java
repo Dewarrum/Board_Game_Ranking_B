@@ -18,7 +18,7 @@ import org.springframework.web.server.ResponseStatusException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
+import com.board_game_back.Utils.InviteCodeUtil;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -49,7 +49,7 @@ public class RoomService {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "커뮤니티 어드민만 그룹을 만들 수 있습니다.");
         }
 
-        String inviteCode = UUID.randomUUID().toString().substring(0, 6).toUpperCase();
+        String inviteCode = InviteCodeUtil.generate();
         Room room = new Room(roomName, inviteCode, boardGameId);
         if (communityId != null) room.setCommunityId(communityId);
         Room savedRoom = roomRepository.save(room);
