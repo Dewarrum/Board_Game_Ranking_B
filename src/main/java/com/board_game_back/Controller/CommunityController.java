@@ -38,6 +38,13 @@ public class CommunityController {
         return ResponseEntity.ok(communityService.getCommunityRooms(communityId));
     }
 
+    @PatchMapping("/{communityId}")
+    public ResponseEntity<CommunityDto.Response> updateCommunity(
+            @PathVariable Long communityId,
+            @RequestBody CommunityDto.UpdateRequest request) {
+        return ResponseEntity.ok(communityService.updateCommunity(communityId, request));
+    }
+
     @PostMapping("/{communityId}/rooms/{roomId}")
     public ResponseEntity<String> addRoomToCommunity(
             @PathVariable Long communityId,
