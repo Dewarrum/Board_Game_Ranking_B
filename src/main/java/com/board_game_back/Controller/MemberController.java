@@ -36,15 +36,17 @@ public class MemberController {
     private final RoomService roomService;
 
     // 닉네임 검색 (커뮤니티 어드민 추가용)
+    // nickname 없거나 빈 값이면 전체 멤버 반환 (최대 100명)
     @GetMapping("/search")
     public ResponseEntity<List<Map<String, Object>>> searchMembers(
-        @RequestParam String nickname,
+        @RequestParam(required = false, defaultValue = "") String nickname,
         @RequestParam(required = false) Long excludeId) {
-        List<Map<String, Object>> results = memberRepository
-            .findByNicknameContainingIgnoreCase(nickname)
-            .stream()
+        List<Member> source = nickname.isBlank()
+            ? memberRepository.findAll()
+            : memberRepository.findByNicknameContainingIgnoreCase(nickname);
+        List<Map<String, Object>> results = source.stream()
             .filter(m -> excludeId == null || !m.getId().equals(excludeId))
-            .limit(10)
+            .limit(100)
             .map(m -> Map.<String, Object>of("memberId", m.getId(), "nickname", m.getNickname()))
             .collect(Collectors.toList());
         return ResponseEntity.ok(results);
