@@ -55,11 +55,17 @@ public class CommunityDto {
         Long boardGameId,
         String imageUrl,
         boolean sessionActive,
-        boolean isMember
+        boolean isMember,
+        long memberCount
     ) {}
 
     public record JoinRequest(
         String inviteCode,
         Long memberId
+    ) {}
+
+    public record MemberInfo(
+        Long memberId,
+        String nickname
     ) {}
 }

@@ -115,9 +115,10 @@ public class CommunityService {
                     : null;
                 boolean isMember = memberId != null &&
                     roomMemberRepository.findByRoomIdAndMemberId(r.getId(), memberId).isPresent();
+                long memberCount = roomMemberRepository.countByRoomId(r.getId());
                 return new CommunityDto.RoomResponse(
                     r.getId(), r.getName(), r.getInviteCode(), r.getBoardGameId(), imageUrl,
-                    r.isSessionActive(), isMember);
+                    r.isSessionActive(), isMember, memberCount);
             })
             .collect(Collectors.toList());
     }
@@ -180,6 +181,21 @@ public class CommunityService {
             .flatMap(id -> communityRepository.findById(id).stream())
             .filter(c -> !c.getCreatedBy().equals(memberId))
             .map(this::toResponse)
+            .collect(Collectors.toList());
+    }
+
+    @Transactional
+    public void removeCommunityMember(Long communityId, Long memberId) {
+        communityRepository.findById(communityId)
+            .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 커뮤니티입니다."));
+        communityMemberRepository.findByCommunityIdAndMemberId(communityId, memberId)
+            .ifPresent(communityMemberRepository::delete);
+    }
+
+    @Transactional(readOnly = true)
+    public List<CommunityDto.MemberInfo> getCommunityMembers(Long communityId) {
+        return communityMemberRepository.findByCommunityId(communityId).stream()
+            .map(cm -> new CommunityDto.MemberInfo(cm.getMember().getId(), cm.getMember().getNickname()))
             .collect(Collectors.toList());
     }
 
