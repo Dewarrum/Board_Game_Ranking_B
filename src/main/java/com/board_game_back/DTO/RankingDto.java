@@ -6,6 +6,7 @@ public class RankingDto {
         Integer rank,
         Long memberId,
         String nickname,
+        String profileImage,
         double rating,
         int playCount,
         int winCount,
@@ -19,6 +20,7 @@ public class RankingDto {
         int rank,
         Long memberId,
         String nickname,
+        String profileImage,
         double rating
     ) {}
 }

@@ -40,9 +40,10 @@ public class RankingService {
 
             responseList.add(
                 new RankingDto.GameRankingResponse(currentRank++, rating.getMember().getId(),
-                    rating.getMember().getNickname(), rating.getGameStats().getRating(),
-                    rating.getPlayCount(), rating.getWinCount(),    // 추가
-                    rating.getLoseCount()    // 추가
+                    rating.getMember().getNickname(), rating.getMember().getProfileImage(),
+                    rating.getGameStats().getRating(),
+                    rating.getPlayCount(), rating.getWinCount(),
+                    rating.getLoseCount()
                 ));
         }
 
@@ -61,13 +62,15 @@ public class RankingService {
             if (rating.getPlayCount() > 0) {
                 responseList.add(
                     new RankingDto.GameRankingResponse(currentRank++, rating.getMember().getId(),
-                        rating.getMember().getNickname(), rating.getGameStats().getRating(),
+                        rating.getMember().getNickname(), rating.getMember().getProfileImage(),
+                        rating.getGameStats().getRating(),
                         rating.getPlayCount(), rating.getWinCount(), rating.getLoseCount()));
             } else {
                 // 미플레이 멤버: rank = null
                 responseList.add(
                     new RankingDto.GameRankingResponse(null, rating.getMember().getId(),
-                        rating.getMember().getNickname(), rating.getGameStats().getRating(),
+                        rating.getMember().getNickname(), rating.getMember().getProfileImage(),
+                        rating.getGameStats().getRating(),
                         rating.getPlayCount(), rating.getWinCount(), rating.getLoseCount()));
             }
         }
