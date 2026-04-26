@@ -38,6 +38,12 @@ public class CommunityController {
         return ResponseEntity.ok(communityService.getCommunityRooms(communityId));
     }
 
+    @DeleteMapping("/{communityId}")
+    public ResponseEntity<Void> deleteCommunity(@PathVariable Long communityId) {
+        communityService.deleteCommunity(communityId);
+        return ResponseEntity.noContent().build();
+    }
+
     @PatchMapping("/{communityId}")
     public ResponseEntity<CommunityDto.Response> updateCommunity(
             @PathVariable Long communityId,

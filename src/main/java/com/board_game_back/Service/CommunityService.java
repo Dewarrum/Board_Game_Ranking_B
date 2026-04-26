@@ -136,6 +136,14 @@ public class CommunityService {
         roomRepository.save(room);
     }
 
+    @Transactional
+    public void deleteCommunity(Long communityId) {
+        Community community = communityRepository.findById(communityId)
+            .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 커뮤니티입니다."));
+        communityAdminRepository.deleteByCommunityId(communityId);
+        communityRepository.delete(community);
+    }
+
     private CommunityDto.Response toResponse(Community c) {
         return new CommunityDto.Response(c.getId(), c.getName(), c.getRegion(), c.getImageUrl(), c.getStatus());
     }
