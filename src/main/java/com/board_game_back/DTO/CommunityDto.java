@@ -33,7 +33,8 @@ public class CommunityDto {
 
     public record AdminInfo(
         Long memberId,
-        String nickname
+        String nickname,
+        String profileImage
     ) {}
 
     public record DetailResponse(
@@ -66,6 +67,7 @@ public class CommunityDto {
 
     public record MemberInfo(
         Long memberId,
-        String nickname
+        String nickname,
+        String profileImage
     ) {}
 }

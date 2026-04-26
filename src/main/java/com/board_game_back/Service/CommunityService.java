@@ -95,7 +95,7 @@ public class CommunityService {
 
         List<CommunityDto.AdminInfo> admins = communityAdminRepository.findByCommunityId(communityId)
             .stream()
-            .map(ca -> new CommunityDto.AdminInfo(ca.getMember().getId(), ca.getMember().getNickname()))
+            .map(ca -> new CommunityDto.AdminInfo(ca.getMember().getId(), ca.getMember().getNickname(), ca.getMember().getProfileImage()))
             .collect(Collectors.toList());
 
         return new CommunityDto.DetailResponse(
@@ -195,7 +195,7 @@ public class CommunityService {
     @Transactional(readOnly = true)
     public List<CommunityDto.MemberInfo> getCommunityMembers(Long communityId) {
         return communityMemberRepository.findByCommunityId(communityId).stream()
-            .map(cm -> new CommunityDto.MemberInfo(cm.getMember().getId(), cm.getMember().getNickname()))
+            .map(cm -> new CommunityDto.MemberInfo(cm.getMember().getId(), cm.getMember().getNickname(), cm.getMember().getProfileImage()))
             .collect(Collectors.toList());
     }
 
@@ -212,7 +212,7 @@ public class CommunityService {
         int groupCount = (int) roomRepository.countByCommunityId(c.getId());
         List<CommunityDto.AdminInfo> admins = communityAdminRepository.findByCommunityId(c.getId())
             .stream()
-            .map(ca -> new CommunityDto.AdminInfo(ca.getMember().getId(), ca.getMember().getNickname()))
+            .map(ca -> new CommunityDto.AdminInfo(ca.getMember().getId(), ca.getMember().getNickname(), ca.getMember().getProfileImage()))
             .collect(Collectors.toList());
         return new CommunityDto.Response(
             c.getId(), c.getName(), c.getRegion(), c.getImageUrl(), c.getStatus(),
