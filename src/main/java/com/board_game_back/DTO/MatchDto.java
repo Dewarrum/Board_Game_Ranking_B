@@ -38,6 +38,7 @@ public class MatchDto {
     public record ParticipantHistoryResponse(
         Long memberId,
         String nickname,
+        String profileImage,
         int placement,
         double ratingChange,
         String scoresJson   // nullable (구버전 데이터)

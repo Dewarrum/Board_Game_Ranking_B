@@ -138,6 +138,7 @@ public class MatchService {
                     .map(p -> new MatchDto.ParticipantHistoryResponse(
                         p.getMember().getId(),
                         p.getMember().getNickname(),
+                        p.getMember().getProfileImage(),
                         p.getPlacement(),
                         p.getRatingChange(),
                         p.getScoresJson()
