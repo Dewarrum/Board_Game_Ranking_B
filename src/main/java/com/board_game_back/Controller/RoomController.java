@@ -72,6 +72,7 @@ public class RoomController {
                 map.put("memberId", rm.getMember().getId());
                 map.put("nickname", rm.getMember().getNickname());
                 map.put("isHost", "HOST".equals(rm.getRole()));
+                map.put("profileImage", rm.getMember().getProfileImage());
                 return map;
             })
             .collect(java.util.stream.Collectors.toList());
