@@ -17,7 +17,8 @@ public class MemberDto {
         Long memberId,
         String nickname,
         double overallRating,
-        double overallRd
+        double overallRd,
+        String profileImage
     ) {}
 
     // 📤 [Response] 게임별 통계 항목
