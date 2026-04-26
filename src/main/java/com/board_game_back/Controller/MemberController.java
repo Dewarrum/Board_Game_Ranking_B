@@ -21,6 +21,7 @@ import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -33,6 +34,23 @@ public class MemberController {
     private final MemberRepository memberRepository;
     private final PlayerGameRatingRepository playerGameRatingRepository;
     private final RoomService roomService;
+
+    // 닉네임 검색 (커뮤니티 어드민 추가용)
+    // nickname 없거나 빈 값이면 전체 멤버 반환 (최대 100명)
+    @GetMapping("/search")
+    public ResponseEntity<List<Map<String, Object>>> searchMembers(
+        @RequestParam(required = false, defaultValue = "") String nickname,
+        @RequestParam(required = false) Long excludeId) {
+        List<Member> source = nickname.isBlank()
+            ? memberRepository.findAll()
+            : memberRepository.findByNicknameContainingIgnoreCase(nickname);
+        List<Map<String, Object>> results = source.stream()
+            .filter(m -> excludeId == null || !m.getId().equals(excludeId))
+            .limit(100)
+            .map(m -> Map.<String, Object>of("memberId", m.getId(), "nickname", m.getNickname()))
+            .collect(Collectors.toList());
+        return ResponseEntity.ok(results);
+    }
 
     // 멤버 조회
     @GetMapping("/{memberId}")

@@ -28,6 +28,16 @@ public class CommunityController {
         return ResponseEntity.ok(response);
     }
 
+    @GetMapping("/my/list/{memberId}")
+    public ResponseEntity<List<CommunityDto.Response>> getMyCommunitiesList(@PathVariable Long memberId) {
+        return ResponseEntity.ok(communityService.getMyCommunitiesList(memberId));
+    }
+
+    @GetMapping("/joined/{memberId}")
+    public ResponseEntity<List<CommunityDto.Response>> getJoinedCommunities(@PathVariable Long memberId) {
+        return ResponseEntity.ok(communityService.getJoinedCommunities(memberId));
+    }
+
     @GetMapping("/{communityId}")
     public ResponseEntity<CommunityDto.DetailResponse> getCommunityDetail(@PathVariable Long communityId) {
         return ResponseEntity.ok(communityService.getCommunityDetail(communityId));
@@ -36,6 +46,19 @@ public class CommunityController {
     @GetMapping("/{communityId}/rooms")
     public ResponseEntity<List<CommunityDto.RoomResponse>> getCommunityRooms(@PathVariable Long communityId) {
         return ResponseEntity.ok(communityService.getCommunityRooms(communityId));
+    }
+
+    @DeleteMapping("/{communityId}")
+    public ResponseEntity<Void> deleteCommunity(@PathVariable Long communityId) {
+        communityService.deleteCommunity(communityId);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PatchMapping("/{communityId}")
+    public ResponseEntity<CommunityDto.Response> updateCommunity(
+            @PathVariable Long communityId,
+            @RequestBody CommunityDto.UpdateRequest request) {
+        return ResponseEntity.ok(communityService.updateCommunity(communityId, request));
     }
 
     @PostMapping("/{communityId}/rooms/{roomId}")

@@ -2,6 +2,7 @@ package com.board_game_back.Repository;
 
 import com.board_game_back.Entity.CommunityAdmin;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import java.util.List;
@@ -14,4 +15,8 @@ public interface CommunityAdminRepository extends JpaRepository<CommunityAdmin, 
     boolean existsByCommunityIdAndMemberId(Long communityId, Long memberId);
 
     int countByCommunityId(Long communityId);
+
+    @Modifying
+    @Query("DELETE FROM CommunityAdmin ca WHERE ca.community.id = :communityId")
+    void deleteByCommunityId(@Param("communityId") Long communityId);
 }

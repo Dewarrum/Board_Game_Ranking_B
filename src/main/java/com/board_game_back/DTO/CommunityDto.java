@@ -12,12 +12,22 @@ public class CommunityDto {
         List<Long> adminMemberIds
     ) {}
 
+    public record UpdateRequest(
+        String name,
+        String region,
+        String imageUrl,
+        List<Long> adminMemberIds
+    ) {}
+
     public record Response(
         Long communityId,
         String name,
         String region,
         String imageUrl,
-        String status
+        String status,
+        long memberCount,
+        int groupCount,
+        List<AdminInfo> admins
     ) {}
 
     public record AdminInfo(

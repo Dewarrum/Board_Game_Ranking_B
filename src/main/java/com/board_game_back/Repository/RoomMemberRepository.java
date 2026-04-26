@@ -23,4 +23,8 @@ public interface RoomMemberRepository extends JpaRepository<RoomMember, Long> {
     @org.springframework.data.jpa.repository.Query(
         "SELECT COUNT(DISTINCT rm.member.id) FROM RoomMember rm WHERE rm.room.communityId = :communityId")
     long countDistinctMemberByCommunityId(@org.springframework.data.repository.query.Param("communityId") Long communityId);
+
+    @org.springframework.data.jpa.repository.Query(
+        "SELECT DISTINCT rm.room.communityId FROM RoomMember rm WHERE rm.member.id = :memberId AND rm.room.communityId IS NOT NULL")
+    java.util.List<Long> findDistinctCommunityIdsByMemberId(@org.springframework.data.repository.query.Param("memberId") Long memberId);
 }

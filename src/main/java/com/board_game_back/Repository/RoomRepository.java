@@ -8,4 +8,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
 public interface RoomRepository extends JpaRepository<Room, Long> {
     Optional<Room> findByInviteCode(String inviteCode);
     List<Room> findByCommunityId(Long communityId);
+    long countByCommunityId(Long communityId);
 }
