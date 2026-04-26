@@ -62,7 +62,8 @@ public class MemberController {
                 member.getId(),
                 member.getNickname(),
                 member.getOverallStats().getRating(),
-                member.getOverallStats().getRatingDeviation()
+                member.getOverallStats().getRatingDeviation(),
+                member.getProfileImage()
             )
         );
     }
@@ -106,6 +107,20 @@ public class MemberController {
                     ? e.getMessage()
                     : "회원 탈퇴 처리 중 서버 오류가 발생했습니다.");
         }
+    }
+
+    // 프로필 이미지 변경
+    @PatchMapping("/{id}/profile-image")
+    @Transactional
+    public ResponseEntity<Void> updateProfileImage(
+        @PathVariable Long id,
+        @RequestBody Map<String, String> body) {
+        String profileImage = body.get("profileImage");
+        Member member = memberRepository.findById(id)
+            .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 회원입니다."));
+        member.updateProfileImage(profileImage);
+        memberRepository.save(member);
+        return ResponseEntity.ok().build();
     }
 
     // 닉네임 변경

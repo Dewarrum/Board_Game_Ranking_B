@@ -35,6 +35,9 @@ public class Member {
     private String password;
     private String role = "USER";
 
+    @Column(name = "profile_image", columnDefinition = "TEXT")
+    private String profileImage;
+
     @Embedded
     @AttributeOverrides({
         @AttributeOverride(name = "rating", column = @Column(name = "overall_rating")),
@@ -51,6 +54,10 @@ public class Member {
 
     public void updateNickname(String nickname) {
         this.nickname = nickname;
+    }
+
+    public void updateProfileImage(String profileImage) {
+        this.profileImage = profileImage;
     }
 
     /** 토스 계정 연동 (추후 토스 로그인 도입 시 닉네임 계정에 socialId 연결) */
