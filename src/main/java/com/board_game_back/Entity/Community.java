@@ -34,7 +34,7 @@ public class Community {
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
 
-    @Column(unique = true, length = 10)
+    @Column(unique = true, length = 6)
     private String inviteCode;
 
     @OneToMany(mappedBy = "community", cascade = CascadeType.ALL, orphanRemoval = true)

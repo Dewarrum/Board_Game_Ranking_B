@@ -35,7 +35,7 @@ public class CommunityService {
 
     @Transactional
     public CommunityDto.Response createCommunity(CommunityDto.CreateRequest req) {
-        String inviteCode = UUID.randomUUID().toString().replace("-", "").substring(0, 8).toUpperCase();
+        String inviteCode = UUID.randomUUID().toString().substring(0, 6).toUpperCase();
         Community community = new Community(req.name(), req.region(), req.imageUrl(), req.createdBy());
         community.setInviteCode(inviteCode);
         communityRepository.save(community);
