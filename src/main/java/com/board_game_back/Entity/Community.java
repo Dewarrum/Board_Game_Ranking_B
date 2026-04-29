@@ -22,7 +22,7 @@ public class Community {
     @Column(length = 100)
     private String region;
 
-    @Column(length = 500)
+    @Column(columnDefinition = "TEXT")
     private String imageUrl;
 
     @Column(nullable = false, length = 20)
