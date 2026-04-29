@@ -4,16 +4,13 @@ import com.board_game_back.Entity.BoardGame;
 import com.board_game_back.Entity.Member;
 import com.board_game_back.Repository.BoardGameRepository;
 import com.board_game_back.Repository.MemberRepository;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
+import org.springframework.web.client.RestTemplate;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -37,8 +34,11 @@ public class AdminController {
     private final BoardGameRepository boardGameRepository;
     private final MemberRepository memberRepository;
 
-    @Value("${app.upload-dir:uploads}")
-    private String uploadDir;
+    @Value("${supabase.url}")
+    private String supabaseUrl;
+
+    @Value("${supabase.service-role-key}")
+    private String serviceRoleKey;
 
     private void checkAdmin() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
@@ -110,17 +110,28 @@ public class AdminController {
 
     /** 게임 이미지 업로드 */
     @PostMapping("/upload-image")
-    public ResponseEntity<Map<String, String>> uploadImage(
-            @RequestParam MultipartFile file) throws IOException {
+    public ResponseEntity<Map<String, String>> uploadImage(@RequestParam MultipartFile file) {
         checkAdmin();
-        Path uploadPath = Paths.get(uploadDir);
-        Files.createDirectories(uploadPath);
-        String original = file.getOriginalFilename();
-        String ext = (original != null && original.contains("."))
-                ? original.substring(original.lastIndexOf('.'))
-                : "";
-        String filename = UUID.randomUUID() + ext;
-        Files.copy(file.getInputStream(), uploadPath.resolve(filename));
-        return ResponseEntity.ok(Map.of("url", "/images/" + filename));
+        try {
+            String filename = UUID.randomUUID() + ".jpg";
+            String uploadUrl = supabaseUrl + "/storage/v1/object/game-images/" + filename;
+
+            RestTemplate restTemplate = new RestTemplate();
+            HttpHeaders headers = new HttpHeaders();
+            headers.set("Authorization", "Bearer " + serviceRoleKey);
+            headers.setContentType(MediaType.IMAGE_JPEG);
+
+            restTemplate.exchange(
+                uploadUrl,
+                HttpMethod.PUT,
+                new HttpEntity<>(file.getBytes(), headers),
+                String.class
+            );
+
+            String publicUrl = supabaseUrl + "/storage/v1/object/public/game-images/" + filename;
+            return ResponseEntity.ok(Map.of("url", publicUrl));
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(Map.of("error", e.getMessage()));
+        }
     }
 }
