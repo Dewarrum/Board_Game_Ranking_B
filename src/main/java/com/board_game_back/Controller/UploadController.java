@@ -22,6 +22,9 @@ public class UploadController {
     @Value("${supabase.storage.bucket}")
     private String bucket;
 
+    @Value("${supabase.storage.profile-bucket}")
+    private String profileBucket;
+
     @PostMapping("/image")
     public ResponseEntity<Map<String, String>> uploadImage(@RequestParam MultipartFile file) {
         try {
@@ -41,6 +44,31 @@ public class UploadController {
             );
 
             String publicUrl = supabaseUrl + "/storage/v1/object/public/" + bucket + "/" + filename;
+            return ResponseEntity.ok(Map.of("url", publicUrl));
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    @PostMapping("/profile-image")
+    public ResponseEntity<Map<String, String>> uploadProfileImage(@RequestParam MultipartFile file) {
+        try {
+            String filename = UUID.randomUUID() + ".jpg";
+            String uploadUrl = supabaseUrl + "/storage/v1/object/" + profileBucket + "/" + filename;
+
+            RestTemplate restTemplate = new RestTemplate();
+            HttpHeaders headers = new HttpHeaders();
+            headers.set("Authorization", "Bearer " + serviceRoleKey);
+            headers.setContentType(MediaType.IMAGE_JPEG);
+
+            restTemplate.exchange(
+                uploadUrl,
+                HttpMethod.PUT,
+                new HttpEntity<>(file.getBytes(), headers),
+                String.class
+            );
+
+            String publicUrl = supabaseUrl + "/storage/v1/object/public/" + profileBucket + "/" + filename;
             return ResponseEntity.ok(Map.of("url", publicUrl));
         } catch (Exception e) {
             return ResponseEntity.status(500).body(Map.of("error", e.getMessage()));
