@@ -45,3 +45,5 @@ application-local.properties
 ### Local DB ###
 data/
 
+## Node modules
+node_modules/
