@@ -69,8 +69,8 @@ bootJar {
 }
 
 flyway {
-    url = 'jdbc:postgresql://localhost:5432/postgres'
-    user = 'postgres'
-    password = 'password'
+    url = System.getenv('SPRING_DATASOURCE_URL') ?: 'jdbc:postgresql://127.0.0.1:54322/postgres'
+    user = System.getenv('SPRING_DATASOURCE_USERNAME') ?: 'postgres'
+    password = System.getenv('SPRING_DATASOURCE_PASSWORD') ?: 'postgres'
     locations = ['filesystem:src/main/resources/db/migration']
 }

@@ -40,6 +40,7 @@ out/
 .env
 .env.*
 *.env
+!.env.local.example
 application-local.properties
 
 ### Local DB ###
