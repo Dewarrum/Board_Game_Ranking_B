@@ -152,7 +152,8 @@ public class OAuth2AuthController {
             String nickname = extractKakaoNickname(userBody);
             redirectWithToken(response, socialId, nickname, true);
         } catch (Exception e) {
-            response.sendRedirect(frontendUrl + "/login?error=kakao");
+            String msg = e.getMessage() != null ? e.getMessage() : e.getClass().getSimpleName();
+            response.sendRedirect(frontendUrl + "/login?error=kakao&msg=" + URLEncoder.encode(msg, StandardCharsets.UTF_8));
         }
     }
 
