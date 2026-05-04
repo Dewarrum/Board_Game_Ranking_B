@@ -33,7 +33,9 @@ public class SecurityConfig {
             "https://yadarank.com",
             "https://www.yadarank.com",
             "https://my-boardup.apps.tossmini.com",
-            "https://my-boardup.private-apps.tossmini.com"
+            "https://my-boardup.private-apps.tossmini.com",
+            "capacitor://localhost",
+            "http://localhost"
         ));
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
