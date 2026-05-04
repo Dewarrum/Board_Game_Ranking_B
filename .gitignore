@@ -40,8 +40,11 @@ out/
 .env
 .env.*
 *.env
+!.env.local.example
 application-local.properties
 
 ### Local DB ###
 data/
 
+## Node modules
+node_modules/
