@@ -37,6 +37,9 @@ public class OAuth2AuthController {
     @Value("${GOOGLE_CLIENT_SECRET:}")
     private String googleClientSecret;
 
+    @Value("${KAKAO_REST_API_KEY:}")
+    private String kakaoRestApiKey;
+
     @Value("${FRONTEND_URL:https://boardup.pages.dev}")
     private String frontendUrl;
 
@@ -46,6 +49,10 @@ public class OAuth2AuthController {
     private static final String GOOGLE_AUTH_URL = "https://accounts.google.com/o/oauth2/v2/auth";
     private static final String GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token";
     private static final String GOOGLE_USER_URL = "https://www.googleapis.com/oauth2/v3/userinfo";
+
+    private static final String KAKAO_AUTH_URL = "https://kauth.kakao.com/oauth/authorize";
+    private static final String KAKAO_TOKEN_URL = "https://kauth.kakao.com/oauth/token";
+    private static final String KAKAO_USER_URL = "https://kapi.kakao.com/v2/user/me";
 
     /** 구글 인증 페이지로 리다이렉트 */
     @GetMapping("/google")
@@ -98,7 +105,66 @@ public class OAuth2AuthController {
     }
 
 
+    /** 카카오 인증 페이지로 리다이렉트 */
+    @GetMapping("/kakao/login")
+    public void kakaoLogin(
+            @RequestParam(defaultValue = "web") String platform,
+            HttpServletResponse response) throws IOException {
+        String redirectUri = backendUrl + "/api/auth/kakao/callback";
+        String url = KAKAO_AUTH_URL
+                + "?client_id=" + kakaoRestApiKey
+                + "&redirect_uri=" + URLEncoder.encode(redirectUri, StandardCharsets.UTF_8)
+                + "&response_type=code"
+                + "&state=" + platform;
+        response.sendRedirect(url);
+    }
+
+    /** 카카오 OAuth2 콜백 */
+    @GetMapping("/kakao/callback")
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    public void kakaoCallback(
+            @RequestParam String code,
+            @RequestParam(defaultValue = "web") String state,
+            HttpServletResponse response) throws IOException {
+        try {
+            RestTemplate restTemplate = new RestTemplate();
+            String redirectUri = backendUrl + "/api/auth/kakao/callback";
+
+            MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
+            params.add("grant_type", "authorization_code");
+            params.add("client_id", kakaoRestApiKey);
+            params.add("redirect_uri", redirectUri);
+            params.add("code", code);
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+            ResponseEntity<Map> tokenResponse = restTemplate.postForEntity(
+                    KAKAO_TOKEN_URL, new HttpEntity<>(params, headers), Map.class);
+            String accessToken = (String) tokenResponse.getBody().get("access_token");
+
+            HttpHeaders userHeaders = new HttpHeaders();
+            userHeaders.setBearerAuth(accessToken);
+            ResponseEntity<Map> userResponse = restTemplate.exchange(
+                    KAKAO_USER_URL, HttpMethod.GET, new HttpEntity<>(userHeaders), Map.class);
+            Map<String, Object> userBody = userResponse.getBody();
+
+            String socialId = "kakao_" + userBody.get("id");
+            Map<String, Object> kakaoAccount = (Map<String, Object>) userBody.get("kakao_account");
+            Map<String, Object> profile = (Map<String, Object>) kakaoAccount.get("profile");
+            String nickname = (String) profile.get("nickname");
+
+            boolean isNative = "native".equals(state);
+            redirectWithToken(response, socialId, nickname, isNative);
+        } catch (Exception e) {
+            response.sendRedirect(frontendUrl + "/login?error=kakao");
+        }
+    }
+
     private void redirectWithToken(HttpServletResponse response, String socialId, String nickname) throws IOException {
+        redirectWithToken(response, socialId, nickname, false);
+    }
+
+    private void redirectWithToken(HttpServletResponse response, String socialId, String nickname, boolean isNative) throws IOException {
         Member member = memberRepository.findBySocialId(socialId)
                 .orElseGet(() -> {
                     String uniqueNickname = nickname;
@@ -118,11 +184,16 @@ public class OAuth2AuthController {
         String refreshToken = jwtTokenProvider.generateRefreshToken(member.getId());
 
         String encodedNickname = URLEncoder.encode(member.getNickname(), StandardCharsets.UTF_8);
-        response.sendRedirect(frontendUrl + "/oauth-callback"
-                + "?token=" + jwtAccessToken
+        String queryParams = "?token=" + jwtAccessToken
                 + "&userId=" + member.getId()
                 + "&nickname=" + encodedNickname
                 + "&role=" + member.getRole()
-                + "&refreshToken=" + refreshToken);
+                + "&refreshToken=" + refreshToken;
+
+        if (isNative) {
+            response.sendRedirect("yadarank://oauth-callback" + queryParams);
+        } else {
+            response.sendRedirect(frontendUrl + "/oauth-callback" + queryParams);
+        }
     }
 }
