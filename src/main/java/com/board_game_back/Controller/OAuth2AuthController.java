@@ -40,6 +40,9 @@ public class OAuth2AuthController {
     @Value("${KAKAO_REST_API_KEY:}")
     private String kakaoRestApiKey;
 
+    @Value("${KAKAO_CLIENT_SECRET:}")
+    private String kakaoClientSecret;
+
     @Value("${FRONTEND_URL:https://boardup.pages.dev}")
     private String frontendUrl;
 
@@ -165,6 +168,9 @@ public class OAuth2AuthController {
         params.add("client_id", kakaoRestApiKey);
         params.add("redirect_uri", redirectUri);
         params.add("code", code);
+        if (kakaoClientSecret != null && !kakaoClientSecret.isBlank()) {
+            params.add("client_secret", kakaoClientSecret);
+        }
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
         Map tokenBody = restTemplate.postForEntity(KAKAO_TOKEN_URL, new HttpEntity<>(params, headers), Map.class).getBody();
