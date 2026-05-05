@@ -5,6 +5,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -20,6 +21,14 @@ public interface CommunityMemberRepository extends JpaRepository<CommunityMember
     List<Long> findCommunityIdsByMemberId(@Param("memberId") Long memberId);
 
     List<CommunityMember> findByCommunityId(Long communityId);
+
+    @Query("""
+        SELECT cm.community.id, COUNT(cm)
+        FROM CommunityMember cm
+        WHERE cm.community.id IN :communityIds
+        GROUP BY cm.community.id
+        """)
+    List<Object[]> countByCommunityIds(@Param("communityIds") Collection<Long> communityIds);
 
     void deleteByCommunityId(Long communityId);
 }
