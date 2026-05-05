@@ -35,7 +35,8 @@ public class SecurityConfig {
             "https://my-boardup.apps.tossmini.com",
             "https://my-boardup.private-apps.tossmini.com",
             "capacitor://localhost",
-            "http://localhost"
+            "http://localhost",
+            "https://localhost"
         ));
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
