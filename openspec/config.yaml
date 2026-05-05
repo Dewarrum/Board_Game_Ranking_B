@@ -1,0 +1,34 @@
+schema: spec-driven
+
+context: |
+  Project: Board_Game_Ranking_B backend service.
+  Domain: board game matchmaking, rooms, communities, presence, and player rankings.
+
+  Tech stack:
+  - Java 21
+  - Spring Boot 4 (WebMVC, Security, OAuth2 Client, WebSocket, Data JPA)
+  - PostgreSQL (Supabase local by default)
+  - Flyway SQL migrations in src/main/resources/db/migration
+  - JWT-based auth
+  - Gradle build
+
+  Architecture conventions:
+  - Package layout is layered: Controller, Service, Repository, Entity, DTO, Security, Config, Utils.
+  - JPA entities and repositories are the source of truth for persistence.
+  - Business logic should live in Service classes, not Controllers.
+  - API contracts should be expressed through DTO classes.
+
+  Local development defaults:
+  - Default DB URL: jdbc:postgresql://127.0.0.1:54322/postgres
+  - Default Supabase URL: http://127.0.0.1:54321
+  - Environment values are loaded from .env.local via spring.config.import.
+  - Run app locally with ./run-local.sh (bootRun with local profile).
+
+  Security and integration notes:
+  - JWT secret and Supabase service role key come from environment variables.
+  - OAuth callback flow uses FRONTEND_URL and BACKEND_URL.
+  - Flyway is enabled and should be used for schema changes (avoid ad-hoc DDL in code).
+
+  Coding expectations:
+  - Keep changes minimal and focused; preserve existing package structure and naming style.
+  - Prefer explicit tests for service/controller behavior when adding or changing logic.
