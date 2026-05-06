@@ -21,6 +21,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -273,6 +274,16 @@ public class MatchService {
         }
 
         ratingRepository.saveAll(ratingByMemberId.values());
+
+        // 방을 나간 멤버의 PlayerGameRating 삭제 (점수판에서 제거)
+        Set<Long> currentMemberIds = roomMemberRepository.findByRoomId(roomId)
+            .stream().map(rm -> rm.getMember().getId()).collect(Collectors.toSet());
+        List<PlayerGameRating> leftMemberRatings = ratingByMemberId.values().stream()
+            .filter(gr -> !currentMemberIds.contains(gr.getMember().getId()))
+            .collect(Collectors.toList());
+        if (!leftMemberRatings.isEmpty()) {
+            ratingRepository.deleteAll(leftMemberRatings);
+        }
 
         // member.overallStats를 해당 멤버의 전체 최고 rating으로 갱신
         for (PlayerGameRating gr : ratingByMemberId.values()) {

@@ -12,6 +12,7 @@ import com.board_game_back.Repository.CommunityAdminRepository;
 import com.board_game_back.Repository.CommunityMemberRepository;
 import com.board_game_back.Repository.CommunityRepository;
 import com.board_game_back.Repository.MemberRepository;
+import com.board_game_back.Repository.PlayerGameRatingRepository;
 import com.board_game_back.Repository.RoomMemberRepository;
 import com.board_game_back.Repository.RoomRepository;
 import lombok.RequiredArgsConstructor;
@@ -38,6 +39,7 @@ public class CommunityService {
     private final RoomRepository roomRepository;
     private final RoomMemberRepository roomMemberRepository;
     private final BoardGameRepository boardGameRepository;
+    private final PlayerGameRatingRepository playerGameRatingRepository;
 
     @Transactional
     public CommunityDto.Response createCommunity(CommunityDto.CreateRequest req) {
@@ -214,6 +216,7 @@ public class CommunityService {
             .ifPresent(communityMemberRepository::delete);
         List<Room> rooms = roomRepository.findByCommunityId(communityId);
         for (Room room : rooms) {
+            playerGameRatingRepository.deleteByMember_IdAndRoom_Id(memberId, room.getId());
             roomMemberRepository.deleteByRoomIdAndMemberId(room.getId(), memberId);
         }
     }

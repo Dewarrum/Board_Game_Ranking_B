@@ -207,8 +207,6 @@ public class RoomService {
             roomMemberRepository.save(nextHostMember);
         }
 
-        // MatchParticipant에서 해당 멤버 기록 삭제
-        matchParticipantRepository.deleteByMemberIdAndRoomId(memberId, roomId);
         // PlayerGameRating(랭킹) 삭제
         playerGameRatingRepository.deleteByMember_IdAndRoom_Id(memberId, roomId);
         // RoomMember 삭제
