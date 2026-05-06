@@ -23,4 +23,8 @@ public interface CommunityAdminRepository extends JpaRepository<CommunityAdmin, 
     @Modifying
     @Query("DELETE FROM CommunityAdmin ca WHERE ca.community.id = :communityId")
     void deleteByCommunityId(@Param("communityId") Long communityId);
+
+    @Modifying
+    @Query("DELETE FROM CommunityAdmin ca WHERE ca.member.id = :memberId")
+    void deleteByMemberId(@Param("memberId") Long memberId);
 }

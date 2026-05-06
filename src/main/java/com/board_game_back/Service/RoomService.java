@@ -1,12 +1,15 @@
 package com.board_game_back.Service;
 
 import com.board_game_back.Entity.BoardGame;
+import com.board_game_back.Entity.Community;
 import com.board_game_back.Entity.Member;
 import com.board_game_back.Entity.PlayerGameRating;
 import com.board_game_back.Entity.Room;
 import com.board_game_back.Entity.RoomMember;
 import com.board_game_back.Repository.BoardGameRepository;
 import com.board_game_back.Repository.CommunityAdminRepository;
+import com.board_game_back.Repository.CommunityMemberRepository;
+import com.board_game_back.Repository.CommunityRepository;
 import com.board_game_back.Repository.MatchParticipantRepository;
 import com.board_game_back.Repository.MatchRecordRepository;
 import com.board_game_back.Repository.MemberRepository;
@@ -36,6 +39,8 @@ public class RoomService {
     private final MatchRecordRepository matchRecordRepository;
     private final MatchParticipantRepository matchParticipantRepository;
     private final CommunityAdminRepository communityAdminRepository;
+    private final CommunityMemberRepository communityMemberRepository;
+    private final CommunityRepository communityRepository;
 
     /**
      * 1. 새로운 방 생성
@@ -244,6 +249,18 @@ public class RoomService {
         matchParticipantRepository.deleteByMemberId(memberId);
         playerGameRatingRepository.deleteByMember_Id(memberId);
         roomMemberRepository.deleteByMember_Id(memberId);
+
+        // 생성한 커뮤니티 삭제 (community.created_by FK 제거)
+        List<Community> ownedCommunities = communityRepository.findAllByCreatedBy(memberId);
+        for (Community community : ownedCommunities) {
+            communityAdminRepository.deleteByCommunityId(community.getId());
+            communityMemberRepository.deleteByCommunityId(community.getId());
+            communityRepository.delete(community);
+        }
+
+        // 다른 커뮤니티에서의 관리자/멤버 기록 삭제
+        communityAdminRepository.deleteByMemberId(memberId);
+        communityMemberRepository.deleteByMemberId(memberId);
 
         // Member 삭제
         memberRepository.deleteById(memberId);
