@@ -212,6 +212,10 @@ public class CommunityService {
             .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 커뮤니티입니다."));
         communityMemberRepository.findByCommunityIdAndMemberId(communityId, memberId)
             .ifPresent(communityMemberRepository::delete);
+        List<Room> rooms = roomRepository.findByCommunityId(communityId);
+        for (Room room : rooms) {
+            roomMemberRepository.deleteByRoomIdAndMemberId(room.getId(), memberId);
+        }
     }
 
     @Transactional(readOnly = true)
