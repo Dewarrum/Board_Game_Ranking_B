@@ -127,7 +127,10 @@ public class MatchService {
 
     @Transactional
     public List<MatchDto.MatchHistoryResponse> getMatchHistory(Long roomId) {
-        List<MatchRecord> matches = matchRecordRepository.findByRoomIdOrderByPlayedAtDesc(roomId);
+        Room room = roomRepository.findById(roomId).orElseThrow();
+        List<MatchRecord> matches = room.getBoardGameId() != null
+            ? matchRecordRepository.findByRoomIdAndBoardGameIdOrderByPlayedAtDesc(roomId, room.getBoardGameId())
+            : matchRecordRepository.findByRoomIdOrderByPlayedAtDesc(roomId);
         return matches.stream()
             .map(m -> new MatchDto.MatchHistoryResponse(
                 m.getId(),
